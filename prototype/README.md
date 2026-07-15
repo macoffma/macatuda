@@ -13,18 +13,24 @@ economy feel alive?** Specifically it puts these in your hands:
   catch until you fish it.
 - **Press-your-luck reeling** — cast for one more fish or bank your hold; three
   snags and the line snaps and you lose your best catch.
-- **The elastic market** — every sale pushes that price *down* a visible ladder;
-  dump your whole hold and you watch it crash. Ice a couple for a better market.
-- **The investment loop** *(v0.3)* — earnings buy gear that compounds (Sonar,
-  Cold Hold, Bigger Boat), so money is *for* something and a well-timed haul lets
-  you out-build rivals. Scored as net worth (cash + boat) at season's end.
-- **A next-day forecast** *(v0.3)* — read tomorrow's demand and ice fish to sell
-  into the spike; holding is now an informed bet, not arithmetic.
-- **The commons** — grounds you strip below survival die; hammer the sea and it
-  collapses, halving everyone's net worth. (Verified: reachable via greedy play,
+- **Catch of the Day** *(v0.4)* — the economy, felt not calculated. Each day the
+  town craves one fish (shown as dots, à la M.U.L.E.) that pays double until their
+  appetite's full. Chase it, and race rivals to the dock — no forecasts, no price
+  ladders, no spreadsheets.
+- **Fun-first fishing** *(v0.4)* — the catch is the star: reveals with a bit of
+  delight ("A TUNA! The big one!"), the snap is "the one that got away," fish are
+  icons not columns of numbers, and money buys *fun boat gear* (Fish Finder,
+  Strong Line, Bigger Boat) — bought with coins, not financial instruments.
+- **The commons** — spots you strip below survival die; hammer the bay and it
+  collapses, halving everyone's coins. (Verified: reachable via greedy play,
   avoidable with care.)
-- **AI chaos** — Reef Hog (greedy, hoards & dumps), Old Salt (cautious), Barnacle
-  (chaos) move the market around you.
+- **AI rivals** — Reef Hog (greedy), Old Salt (steady), Barnacle (chaos).
+
+> **v0.4 note:** this was a deliberate *simplify + fun* pass. Earlier builds
+> (v0.2–v0.3) grew a finance layer — price forecasts, ladders, net-worth math,
+> overnight holding — that made it read like a trading terminal. v0.4 strips that
+> out and puts the joy of fishing first, keeping the depth (read the water, chase
+> the wanted fish, press your luck, mind the bay) but *felt*, not computed.
 
 ## Deliberately NOT in this version
 
