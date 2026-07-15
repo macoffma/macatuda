@@ -1,0 +1,725 @@
+<title>Overboard — Greybox v0.1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* ---- Maritime sonar-console greybox. Tokened for light/dark. ---- */
+  :root{
+    --ground:#e8efee; --panel:#f7fbfa; --panel-2:#eef4f3; --line:#c5d4d2;
+    --ink:#15272a; --muted:#54706e; --faint:#8aa3a1;
+    --accent:#0e8f86; --accent-ink:#0b6f68;
+    --good:#1f9d6b; --warn:#c9822c; --bad:#c65046;
+    --cod:#7d8b93; --bass:#3f8fb0; --tuna:#c9822c;
+    --shadow:0 1px 0 rgba(0,0,0,.04),0 8px 24px rgba(20,40,44,.06);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0a1417; --panel:#0f2025; --panel-2:#13272d; --line:#21363c;
+      --ink:#d3e6e2; --muted:#7d9997; --faint:#547170;
+      --accent:#4fd1c5; --accent-ink:#7ee3d9;
+      --good:#5bbf8a; --warn:#e0a458; --bad:#e0736b;
+      --cod:#9fb1b9; --bass:#5fb2d0; --tuna:#e0a458;
+      --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#e8efee; --panel:#f7fbfa; --panel-2:#eef4f3; --line:#c5d4d2;
+    --ink:#15272a; --muted:#54706e; --faint:#8aa3a1;
+    --accent:#0e8f86; --accent-ink:#0b6f68;
+    --good:#1f9d6b; --warn:#c9822c; --bad:#c65046;
+    --cod:#7d8b93; --bass:#3f8fb0; --tuna:#c9822c;
+    --shadow:0 1px 0 rgba(0,0,0,.04),0 8px 24px rgba(20,40,44,.06);
+  }
+  :root[data-theme="dark"]{
+    --ground:#0a1417; --panel:#0f2025; --panel-2:#13272d; --line:#21363c;
+    --ink:#d3e6e2; --muted:#7d9997; --faint:#547170;
+    --accent:#4fd1c5; --accent-ink:#7ee3d9;
+    --good:#5bbf8a; --warn:#e0a458; --bad:#e0736b;
+    --cod:#9fb1b9; --bass:#5fb2d0; --tuna:#e0a458;
+    --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+    line-height:1.45;margin:0;-webkit-text-size-adjust:100%}
+  .wrap{max-width:1080px;margin:0 auto;padding:16px 16px 64px}
+  h1,h2,h3{text-wrap:balance;margin:0}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  button{font-family:inherit;cursor:pointer}
+  button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* Masthead */
+  .mast{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;flex-wrap:wrap}
+  .mast .title{font-size:20px;font-weight:700;letter-spacing:.02em}
+  .mast .title .sub{color:var(--accent);font-weight:700}
+  .mast .ver{font-size:11px;color:var(--faint);letter-spacing:.12em;text-transform:uppercase}
+
+  /* HUD */
+  .hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;box-shadow:var(--shadow)}
+  .stat .big{font-size:24px;font-weight:700;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .price-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 0}
+  .price-row .nm{display:flex;align-items:center;gap:7px;font-size:13px}
+  .dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .dot.cod{background:var(--cod)} .dot.bass{background:var(--bass)} .dot.tuna{background:var(--tuna)}
+  .pval{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+  .delta{font-size:11px;font-family:var(--mono);margin-left:6px}
+  .delta.up{color:var(--good)} .delta.down{color:var(--bad)}
+
+  /* Sea health meter */
+  .sea-meter{height:12px;background:var(--panel-2);border-radius:6px;overflow:hidden;position:relative;margin-top:8px;border:1px solid var(--line)}
+  .sea-fill{height:100%;background:var(--good);transition:width .35s ease}
+  .sea-fill.warn{background:var(--warn)} .sea-fill.bad{background:var(--bad)}
+  .sea-line{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--bad);opacity:.7}
+
+  /* Standings */
+  .stand{display:flex;flex-direction:column;gap:6px}
+  .stand .p{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+  .chip{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:middle}
+
+  /* Bay grid */
+  .bay{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:6px 0 14px}
+  .spot{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 12px;
+    text-align:left;color:inherit;display:flex;flex-direction:column;gap:6px;min-height:104px;position:relative}
+  button.spot{transition:transform .08s ease,border-color .15s ease,box-shadow .15s}
+  button.spot:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px)}
+  button.spot:disabled{opacity:.42;cursor:not-allowed}
+  .spot .nm{font-weight:700;font-size:14px}
+  .spot .rumor{font-size:12px;color:var(--muted)}
+  .spot .rem{font-family:var(--mono);font-size:12px;color:var(--faint);display:flex;gap:9px;flex-wrap:wrap}
+  .spot .rem b{color:var(--ink);font-weight:700}
+  .spot .boats{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto}
+  .spot .boats .bt{font-size:10px;padding:2px 6px;border-radius:20px;background:var(--panel-2);
+    border:1px solid var(--line);white-space:nowrap}
+  .spot.dead{opacity:.5}
+  .spot .haz{position:absolute;top:9px;right:10px;font-size:10px;color:var(--warn);letter-spacing:.06em}
+  .spot.chosen{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+
+  /* Stage / interaction panel */
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+  .stage h2{font-size:15px;letter-spacing:.02em;margin-bottom:4px}
+  .stage .hint{color:var(--muted);font-size:13px;margin-bottom:12px}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .btn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink);
+    padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600}
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#04201d}
+  :root[data-theme="dark"] .btn.primary{color:#04201d}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.sell{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:120px}
+  .btn.sell .amt{font-size:11px;color:var(--muted);font-weight:600}
+
+  /* Hold + tension */
+  .hold{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
+  .hold .h{font-family:var(--mono);font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .tension{display:flex;gap:5px;align-items:center;margin:10px 0}
+  .tension .pip{width:22px;height:9px;border-radius:3px;background:var(--panel-2);border:1px solid var(--line)}
+  .tension .pip.on{background:var(--warn);border-color:var(--warn)}
+  .tension .pip.max{background:var(--bad);border-color:var(--bad)}
+  .draw-reveal{font-family:var(--mono);font-size:14px;min-height:22px;margin:4px 0;color:var(--muted)}
+
+  /* Log */
+  .log{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 4px 10px 12px;box-shadow:var(--shadow)}
+  .log h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .log .feed{max-height:190px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;padding-right:8px}
+  .log .ln{font-size:12.5px;color:var(--muted);font-family:var(--mono);line-height:1.5}
+  .log .ln b{color:var(--ink)}
+  .log .ln .g{color:var(--good)} .log .ln .r{color:var(--bad)} .log .ln .a{color:var(--accent)}
+
+  /* Setup + results */
+  .setup{max-width:560px;margin:6vh auto 0}
+  .setup p{color:var(--muted);font-size:14px}
+  .field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  select{font-family:inherit;font-size:14px;padding:7px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--ink)}
+  .results .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+  .results .row.win{color:var(--accent);font-weight:700}
+  .banner{padding:10px 14px;border-radius:9px;font-size:13.5px;margin-bottom:12px}
+  .banner.good{background:color-mix(in srgb,var(--good) 16%,transparent);border:1px solid var(--good)}
+  .banner.bad{background:color-mix(in srgb,var(--bad) 16%,transparent);border:1px solid var(--bad)}
+  .legend{font-size:12px;color:var(--faint);margin-top:10px;line-height:1.6}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="mast">
+    <div class="title">OVER<span class="sub">BOARD</span> <span class="ver">sonar console</span></div>
+    <div class="ver" id="phaseTag">greybox v0.1</div>
+  </div>
+  <div id="app"></div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================================
+   OVERBOARD — mechanics greybox
+   Pure-ish engine (STATE + rules) kept separate from render() so it can later
+   be lifted onto a server for the real TV-hub + iPad build. This version runs
+   the full loop locally: 1 human skipper vs AI rivals. No networking, no
+   hidden-info hotseat yet — that's the next phase. The job here is only to
+   answer: is the loop fun, and does the economy feel alive?
+   ========================================================================= */
+
+const CFG = {
+  maxDaysDefault: 5,
+  hold: 5,
+  startCash: 5,
+  collapse: 18,          // sea-health red line
+  base:  { cod:1, bass:3, tuna:8 },
+  drop:  { cod:0, bass:1, tuna:2 },   // price fall per unit sold
+  floor: { cod:1, bass:1, tuna:3 },   // price cannot fall below
+  recover:{ bass:2, tuna:3 },         // overnight recovery toward baseline
+  capSold:{ bass:3, tuna:8 },         // recovery cap if sold today
+  capDry: { bass:4, tuna:10 },        // recovery cap if none sold (scarcity)
+  spotsDef: [
+    { id:"sa", name:"Shallows A", stock:{cod:4,bass:1,tuna:0}, snags:2, group:"shallows" },
+    { id:"sb", name:"Shallows B", stock:{cod:4,bass:1,tuna:0}, snags:2, group:"shallows" },
+    { id:"ba", name:"Banks A",    stock:{cod:5,bass:3,tuna:0}, snags:2, group:"banks" },
+    { id:"bb", name:"Banks B",    stock:{cod:5,bass:3,tuna:0}, snags:2, group:"banks" },
+    { id:"reef", name:"Deep Reef",stock:{cod:4,bass:4,tuna:2}, snags:3, group:"deep" },
+    { id:"trench", name:"The Trench", stock:{cod:2,bass:3,tuna:5}, snags:3, group:"deep" },
+  ],
+  aiRoster: [
+    { name:"Reef Hog", pers:"greedy",  color:"#c65046" },
+    { name:"Old Salt", pers:"cautious",color:"#3f8fb0" },
+    { name:"Barnacle", pers:"chaos",   color:"#9a6cc9" },
+  ],
+  humanColor:"#0e8f86",
+  species:["cod","bass","tuna"],
+};
+
+const CONDITIONS = [
+  { key:"calm",    text:"Calm seas — flat, quiet water. No effect.", apply(){} },
+  { key:"cannery", text:"Cannery order: bass fetches a premium today.",
+    apply(S){ S.prices.bass = Math.min(6, S.prices.bass + 2); } },
+  { key:"sushi",   text:"A sushi boat docks: tuna demand spikes today.",
+    apply(S){ S.prices.tuna = Math.min(12, S.prices.tuna + 3); } },
+  { key:"storm",   text:"Storm warning over the Shallows — those grounds are closed today.",
+    apply(S){ S.closed = ["sa","sb"]; } },
+  { key:"run",     text:"A bass run hits the Deep Reef — the water's boiling out there.",
+    apply(S){ const r=S.spots.find(s=>s.id==="reef"); r.stock.bass += 3; } },
+  { key:"inspector",text:"Fisheries inspector on the dock — the current leader's first sale is voided today.",
+    apply(S){ const L=leaderId(S); S.inspectOn = L; } },
+];
+
+let STATE = null;
+
+/* ---------- helpers ---------- */
+const sum = o => o.cod + o.bass + o.tuna;
+const clone = o => JSON.parse(JSON.stringify(o));
+function leaderId(S){
+  let best=0, id=S.players[0].id;
+  S.players.forEach(p=>{ if(S.cash[p.id]>best){best=S.cash[p.id];id=p.id;} });
+  return id;
+}
+function seaHealth(S){ return S.spots.reduce((n,s)=>n+sum(s.stock),0); }
+function rumor(total){
+  if(total<=1) return {t:"Fished out",c:"var(--bad)"};
+  if(total<=4) return {t:"Calm",c:"var(--muted)"};
+  if(total<=8) return {t:"Ripples",c:"var(--bass)"};
+  return {t:"Boiling",c:"var(--good)"};
+}
+function log(html){ STATE.log.unshift(html); if(STATE.log.length>60) STATE.log.pop(); }
+function money(n){ return "$"+n; }
+
+/* ---------- new game ---------- */
+function newGame(nPlayers, days){
+  const players = [{ id:0, name:"You", human:true, color:CFG.humanColor }];
+  for(let i=0;i<nPlayers-1;i++){
+    const a = CFG.aiRoster[i];
+    players.push({ id:i+1, name:a.name, human:false, pers:a.pers, color:a.color });
+  }
+  const cash={}, hold={};
+  players.forEach(p=>{ cash[p.id]=CFG.startCash; hold[p.id]={cod:0,bass:0,tuna:0}; });
+  STATE = {
+    day:1, maxDays:days, phase:"sail",
+    players, cash, hold,
+    spots: CFG.spotsDef.map(s=>({ id:s.id, name:s.name, group:s.group,
+      stock:clone(s.stock), snags:s.snags, start:clone(s.stock), visited:false })),
+    prices: clone(CFG.base),
+    prevPrices: clone(CFG.base),
+    choices:{}, closed:[], inspectOn:null,
+    soldToday:{cod:0,bass:0,tuna:0},
+    firstSeller:0, cond:null, reel:null, market:null, log:[], night:null,
+  };
+  startDay();
+}
+
+function startDay(){
+  const S=STATE;
+  S.phase="sail"; S.choices={}; S.closed=[]; S.inspectOn=null;
+  S.soldToday={cod:0,bass:0,tuna:0}; S.prevPrices=clone(S.prices);
+  // draw a condition card, effect applies now (you read it before choosing)
+  S.cond = CONDITIONS[Math.floor(Math.random()*CONDITIONS.length)];
+  S.cond.apply(S);
+  log(`<span class="ln"><b>— Day ${S.day} —</b> ${S.cond.text}</span>`);
+  render();
+}
+
+/* ---------- SAIL: choose spots ---------- */
+function humanPick(spotId){
+  const S=STATE;
+  if(S.phase!=="sail") return;
+  if(S.closed.includes(spotId)) return;
+  S.choices[0]=spotId;
+  // AI choices (independent, simultaneous)
+  S.players.filter(p=>!p.human).forEach(p=> S.choices[p.id]=aiPickSpot(p));
+  log(`<span class="ln">Boats set sail. You chose <b>${spotName(spotId)}</b>.</span>`);
+  resolveFishing();
+}
+function spotName(id){ return STATE.spots.find(s=>s.id===id).name; }
+function spotVal(s){ return s.stock.cod*1 + s.stock.bass*3 + s.stock.tuna*8; }
+
+function aiPickSpot(p){
+  const S=STATE;
+  const open = S.spots.filter(s=>!S.closed.includes(s.id) && sum(s.stock)>0);
+  const pool = open.length?open:S.spots.filter(s=>!S.closed.includes(s.id));
+  if(p.pers==="chaos") return pool[Math.floor(Math.random()*pool.length)].id;
+  if(p.pers==="cautious"){
+    // best value per hazard — avoids snag-heavy deep water
+    return pool.slice().sort((a,b)=> (spotVal(b)/(b.snags+1)) - (spotVal(a)/(a.snags+1)))[0].id;
+  }
+  // greedy: raw value, tuna-hungry
+  return pool.slice().sort((a,b)=> spotVal(b)-spotVal(a))[0].id;
+}
+
+/* ---------- REEL: draw tokens (press your luck) ---------- */
+function drawToken(spot){
+  const st=spot.stock;
+  const total = st.cod+st.bass+st.tuna+spot.snags;
+  if(total<=0) return null;
+  let r=Math.floor(Math.random()*total);
+  if(r<st.cod){ st.cod--; return "cod"; }
+  r-=st.cod;
+  if(r<st.bass){ st.bass--; return "bass"; }
+  r-=st.bass;
+  if(r<st.tuna){ st.tuna--; return "tuna"; }
+  return "snag"; // snags stay in the cup
+}
+function bestFishInHold(h){ if(h.tuna>0)return"tuna"; if(h.bass>0)return"bass"; if(h.cod>0)return"cod"; return null; }
+
+function resolveFishing(){
+  const S=STATE;
+  const humanSpot = S.choices[0];
+  S.spots.forEach(s=>{ if(Object.values(S.choices).includes(s.id)) s.visited=true; });
+  // resolve every all-AI spot fully, now
+  const spotIds=[...new Set(Object.values(S.choices))];
+  spotIds.forEach(sid=>{
+    const boats=S.players.filter(p=>S.choices[p.id]===sid);
+    if(boats.some(b=>b.human)) return; // human spot handled interactively
+    runSpotAuto(sid, boats.map(b=>b.id));
+  });
+  // set up interactive reel for the human's spot
+  const boats=S.players.filter(p=>S.choices[p.id]===humanSpot).map(p=>p.id);
+  const status={}; boats.forEach(id=>status[id]={tension:0,active:true,snap:false});
+  S.reel={ spotId:humanSpot, order:boats, ptr:0, status, lastDraw:"" };
+  S.phase="reel";
+  reelStep();
+}
+
+function runSpotAuto(sid, boatIds){
+  const S=STATE, spot=S.spots.find(s=>s.id===sid);
+  const status={}; boatIds.forEach(id=>status[id]={tension:0,active:true});
+  let guard=0;
+  while(boatIds.some(id=>status[id].active) && guard++<300){
+    boatIds.forEach(id=>{
+      if(!status[id].active) return;
+      aiReelTurn(id, spot, status[id]);
+    });
+  }
+  const shared = boatIds.length>1 ? " (crowded)" : "";
+  boatIds.forEach(id=>{
+    const p=S.players.find(x=>x.id===id);
+    log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> worked ${spot.name}${shared}: `+
+        `held ${holdStr(S.hold[id])}.</span>`);
+  });
+}
+
+function aiReelTurn(id, spot, st){
+  const S=STATE, p=S.players.find(x=>x.id===id), h=S.hold[id];
+  if(sum(h)>=CFG.hold){ st.active=false; return; }
+  if(sum(spot.stock)<=0){ st.active=false; return; }
+  let stopAt = p.pers==="cautious"?1 : p.pers==="greedy"?2 : 2;
+  let go;
+  if(p.pers==="chaos") go = st.tension<2 && Math.random()<0.7;
+  else go = st.tension<stopAt;
+  if(!go){ st.active=false; return; }
+  const tok=drawToken(spot);
+  if(tok==="snag"){
+    st.tension++;
+    if(st.tension>=3){ // SNAP
+      const b=bestFishInHold(h); if(b) h[b]--; st.active=false;
+    }
+  } else if(tok){ h[tok]++; if(sum(h)>=CFG.hold) st.active=false; }
+  else st.active=false;
+}
+
+function reelStep(){
+  const S=STATE, R=S.reel;
+  let guard=0;
+  while(guard++<400){
+    if(!R.order.some(id=>R.status[id].active)){ endReel(); return; }
+    const id=R.order[R.ptr];
+    const st=R.status[id];
+    if(!st.active){ R.ptr=(R.ptr+1)%R.order.length; continue; }
+    const p=S.players.find(x=>x.id===id);
+    if(p.human){ render(); return; }        // wait for human input
+    aiReelTurn(id, S.spots.find(s=>s.id===R.spotId), st);
+    R.ptr=(R.ptr+1)%R.order.length;
+  }
+  endReel();
+}
+
+function humanReel(action){
+  const S=STATE, R=S.reel; if(!R) return;
+  const st=R.status[0], h=S.hold[0], spot=S.spots.find(s=>s.id===R.spotId);
+  if(!st.active) return;
+  if(action==="stop"){ st.active=false; R.lastDraw="You banked your hold."; }
+  else {
+    if(sum(h)>=CFG.hold){ st.active=false; }
+    else {
+      const tok=drawToken(spot);
+      if(tok==="snag"){
+        st.tension++;
+        if(st.tension>=3){
+          const b=bestFishInHold(h);
+          if(b){ h[b]--; R.lastDraw=`SNAP! The line broke — you lost a ${b}.`; }
+          else R.lastDraw="SNAP! The line broke.";
+          st.active=false;
+        } else R.lastDraw=`Snag! Line tension rising (${st.tension}/3)…`;
+      } else if(tok){ h[tok]++; R.lastDraw=`Hauled a ${tok}.`; if(sum(h)>=CFG.hold){st.active=false; R.lastDraw+=" Hold full.";} }
+      else { st.active=false; R.lastDraw="Nothing left down there."; }
+    }
+  }
+  R.ptr=(R.ptr+1)%R.order.length;
+  reelStep();
+}
+
+function endReel(){
+  const S=STATE;
+  const spot=S.spots.find(s=>s.id===S.reel.spotId);
+  log(`<span class="ln"><b style="color:${CFG.humanColor}">You</b> left ${spot.name} with ${holdStr(S.hold[0])}.</span>`);
+  S.reel=null;
+  startMarket();
+}
+
+/* ---------- MARKET: elastic prices ---------- */
+function startMarket(){
+  const S=STATE;
+  const order=[]; for(let i=0;i<S.players.length;i++) order.push(S.players[(S.firstSeller+i)%S.players.length].id);
+  S.market={ order, idx:0, inspectUsed:false };
+  S.phase="market";
+  processMarket();
+}
+function sellUnit(id, type){
+  const S=STATE;
+  let price=S.prices[type];
+  // inspector voids the leader's first sale
+  if(S.inspectOn===id && !S.market.inspectUsed){ S.market.inspectUsed=true; price=0; }
+  S.cash[id]+=price;
+  S.hold[id][type]--;
+  S.soldToday[type]++;
+  S.prices[type]=Math.max(CFG.floor[type], S.prices[type]-CFG.drop[type]);
+  return price;
+}
+function processMarket(){
+  const S=STATE, M=S.market;
+  while(M.idx<M.order.length){
+    const id=M.order[M.idx];
+    const p=S.players.find(x=>x.id===id);
+    if(p.human){ S.phase="market"; render(); return; } // wait for human
+    aiSell(id);
+    M.idx++;
+  }
+  startNight();
+}
+function aiSell(id){
+  const S=STATE, p=S.players.find(x=>x.id===id), h=S.hold[id];
+  const before=S.cash[id];
+  const sold={cod:0,bass:0,tuna:0};
+  const sellAll=t=>{ while(h[t]>0){ sellUnit(id,t); sold[t]++; } };
+  const sellSome=(t,keep)=>{ while(h[t]>keep){ sellUnit(id,t); sold[t]++; } };
+  if(p.pers==="greedy"){ sellAll("cod"); sellAll("bass"); sellAll("tuna"); }
+  else if(p.pers==="cautious"){
+    sellAll("cod"); sellAll("bass");
+    if(S.prices.tuna>=6) sellAll("tuna"); // else hold, hope it recovers (risks spoilage)
+  } else { // chaos
+    CFG.species.forEach(t=>{ if(Math.random()<0.6) sellAll(t); else sellSome(t, Math.floor(Math.random()*2)); });
+  }
+  const made=S.cash[id]-before;
+  const parts=CFG.species.filter(t=>sold[t]).map(t=>`${sold[t]} ${t}`).join(", ")||"nothing";
+  log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> sold ${parts} for <span class="g">${money(made)}</span>.</span>`);
+}
+function humanSell(type){
+  const S=STATE;
+  if(S.phase!=="market" || S.market.order[S.market.idx]!==0) return;
+  if(S.hold[0][type]<=0) return;
+  const got=sellUnit(0,type);
+  S.marketMade=(S.marketMade||0)+got;
+  render();
+}
+function humanMarketDone(){
+  const S=STATE;
+  const made=S.marketMade||0; S.marketMade=0;
+  log(`<span class="ln"><b style="color:${CFG.humanColor}">You</b> sold at the dock for <span class="g">${money(made)}</span>.</span>`);
+  S.market.idx++;
+  processMarket();
+}
+
+/* ---------- NIGHT: spoilage, recovery, breeding, collapse ---------- */
+function startNight(){
+  const S=STATE;
+  // spoilage — anything unsold rots one of each species
+  let spoiled=0;
+  S.players.forEach(p=>{ CFG.species.forEach(t=>{ if(S.hold[p.id][t]>0){ S.hold[p.id][t]--; spoiled++; } }); });
+  // price recovery toward baseline
+  ["bass","tuna"].forEach(t=>{
+    const cap = S.soldToday[t]>0 ? CFG.capSold[t] : CFG.capDry[t];
+    S.prices[t]=Math.min(cap, S.prices[t]+CFG.recover[t]);
+  });
+  // breeding: healthy grounds regenerate, stripped grounds die
+  let bred=0;
+  S.spots.forEach(s=>{
+    if(sum(s.stock)>=2){
+      if(s.stock.cod < s.start.cod){ s.stock.cod++; bred++; }
+      const rare = s.start.tuna>0 ? "tuna" : (s.start.bass>0 ? "bass":null);
+      if(rare && s.stock[rare] < s.start[rare]){ s.stock[rare]++; bred++; }
+    }
+  });
+  const health=seaHealth(S);
+  S.night={ spoiled, bred, health, crisis: health<CFG.collapse };
+  if(health<CFG.collapse) log(`<span class="ln"><span class="r">⚠ The fishery is collapsing (${health} fish left).</span></span>`);
+  S.firstSeller=(S.firstSeller+1)%S.players.length;
+  S.phase="night";
+  render();
+}
+function nextDay(){
+  const S=STATE;
+  if(S.day>=S.maxDays){ endGame(); return; }
+  S.day++; startDay();
+}
+function endGame(){
+  const S=STATE;
+  S.collapsed = seaHealth(S) < CFG.collapse;
+  if(S.collapsed) S.players.forEach(p=> S.cash[p.id]=Math.floor(S.cash[p.id]/2));
+  S.phase="over";
+  render();
+}
+
+/* ---------- rendering ---------- */
+function holdStr(h){
+  const parts=CFG.species.filter(t=>h[t]>0).map(t=>`${h[t]} ${t}`);
+  return parts.length?parts.join(", "):"nothing";
+}
+function priceDelta(t){
+  const d=STATE.prices[t]-STATE.prevPrices[t];
+  if(d===0||t==="cod") return "";
+  return `<span class="delta ${d>0?'up':'down'}">${d>0?'▲':'▼'}${Math.abs(d)}</span>`;
+}
+const el = (id)=>document.getElementById(id);
+document.getElementById("app");
+
+function hud(){
+  const S=STATE, health=seaHealth(S), maxHealth=46;
+  const pct=Math.max(0,Math.min(100,health/maxHealth*100));
+  const linePct=CFG.collapse/maxHealth*100;
+  const cls = health<CFG.collapse?"bad":health<maxHealth*0.55?"warn":"";
+  const prices = CFG.species.map(t=>`
+    <div class="price-row">
+      <span class="nm"><span class="dot ${t}"></span>${t[0].toUpperCase()+t.slice(1)}</span>
+      <span><span class="pval">${money(S.prices[t])}</span>${priceDelta(t)}</span>
+    </div>`).join("");
+  const stand = S.players.slice().sort((a,b)=>S.cash[b.id]-S.cash[a.id]).map(p=>`
+    <div class="p"><span><span class="chip" style="background:${p.color}"></span>${p.name}${p.human?"":` · <span style="color:var(--faint)">${p.pers}</span>`}</span>
+    <span class="pval">${money(S.cash[p.id])}</span></div>`).join("");
+  return `
+  <div class="hud">
+    <div class="card stat">
+      <div class="label">Day</div>
+      <div class="big">${S.day} <span style="color:var(--faint);font-size:15px">/ ${S.maxDays}</span></div>
+    </div>
+    <div class="card">
+      <div class="label">Dock prices</div>
+      ${prices}
+    </div>
+    <div class="card">
+      <div class="label">Sea health</div>
+      <div class="big" style="font-size:20px">${health} <span style="font-size:12px;color:var(--faint)">fish</span></div>
+      <div class="sea-meter"><div class="sea-fill ${cls}" style="width:${pct}%"></div><div class="sea-line" style="left:${linePct}%"></div></div>
+    </div>
+    <div class="card">
+      <div class="label">Standings</div>
+      <div class="stand">${stand}</div>
+    </div>
+  </div>`;
+}
+
+function bay(clickable){
+  const S=STATE;
+  return `<div class="bay">`+S.spots.map(s=>{
+    const total=sum(s.stock), r=rumor(total);
+    const closed=S.closed.includes(s.id);
+    const dead=total<=1;
+    const boats = Object.keys(S.choices).filter(id=>S.choices[id]===s.id)
+      .map(id=>{const p=S.players.find(x=>x.id==id);return `<span class="bt" style="border-color:${p.color}">${p.name}</span>`}).join("");
+    const rem = s.visited ? `<div class="rem">
+        <span><span class="dot cod"></span> <b>${s.stock.cod}</b></span>
+        <span><span class="dot bass"></span> <b>${s.stock.bass}</b></span>
+        ${s.start.tuna>0?`<span><span class="dot tuna"></span> <b>${s.stock.tuna}</b></span>`:""}
+      </div>` : `<div class="rem" style="color:var(--faint)">unscouted</div>`;
+    const chosen = S.choices[0]===s.id ? "chosen":"";
+    const tag = clickable && !closed && !dead ? "button" : "div";
+    const dis = clickable ? (closed||dead?"disabled":"") : "";
+    const attr = clickable? `data-act="pick" data-spot="${s.id}" ${dis}` : "";
+    return `<${tag} class="spot ${dead?'dead':''} ${chosen}" ${attr}>
+      <span class="haz">${"◆".repeat(s.snags)} snag</span>
+      <div class="nm">${s.name}</div>
+      <div class="rumor" style="color:${r.c}">${closed?"⛈ Closed (storm)":r.t}</div>
+      ${rem}
+      <div class="boats">${boats}</div>
+    </${tag}>`;
+  }).join("")+`</div>`;
+}
+
+function stageSail(){
+  return `<div class="stage">
+    <h2>Set sail</h2>
+    <div class="hint">${STATE.cond.text} &nbsp;·&nbsp; Pick your grounds — you can't see exactly what's down there until you fish it.</div>
+    ${bay(true)}
+    <div class="legend">Rumor reads the water (Boiling → Fished out). ◆ = snag hazard (deep water breaks more lines). Tuna only runs the Reef &amp; the Trench.</div>
+  </div>`;
+}
+
+function stageReel(){
+  const S=STATE, R=S.reel, st=R.status[0], h=S.hold[0], spot=S.spots.find(s=>s.id===R.spotId);
+  const pips=[0,1,2].map(i=>`<span class="pip ${st.tension>i?(i===2?'max':'on'):''}"></span>`).join("");
+  const full=sum(h)>=CFG.hold, done=!st.active;
+  const others = R.order.filter(id=>id!==0);
+  const crowd = others.length? `<div class="hint">Sharing ${spot.name} with ${others.map(id=>S.players.find(p=>p.id==id).name).join(", ")} — they're drawing from the same water between your casts.</div>`:"";
+  return `<div class="stage">
+    <h2>Reeling · ${spot.name}</h2>
+    <div class="hint">Cast for another fish, or bank what you've got. Three snags and the line snaps — you lose your best catch.</div>
+    ${crowd}
+    <div class="hold">
+      <span class="h"><span class="dot cod"></span> ${h.cod}</span>
+      <span class="h"><span class="dot bass"></span> ${h.bass}</span>
+      <span class="h"><span class="dot tuna"></span> ${h.tuna}</span>
+      <span class="h" style="color:var(--faint)">hold ${sum(h)}/${CFG.hold}</span>
+    </div>
+    <div class="tension">${pips} <span class="label" style="margin-left:6px">line tension</span></div>
+    <div class="draw-reveal">${R.lastDraw||"&nbsp;"}</div>
+    <div class="btnrow">
+      <button class="btn primary" data-act="reel-draw" ${(full||done)?"disabled":""}>Cast again</button>
+      <button class="btn" data-act="reel-stop" ${done?"disabled":""}>Bank hold &amp; head to dock</button>
+    </div>
+  </div>`;
+}
+
+function stageMarket(){
+  const S=STATE, myTurn=S.market.order[S.market.idx]===0, h=S.hold[0];
+  if(!myTurn){ return `<div class="stage"><h2>At the dock</h2><div class="hint">Rivals are selling first — watch the prices move.</div></div>`; }
+  const made=S.marketMade||0;
+  const btn=t=>`<button class="btn sell" data-act="sell" data-type="${t}" ${h[t]<=0?"disabled":""}>
+    <span><span class="dot ${t}"></span> Sell ${t}</span>
+    <span class="amt">have ${h[t]} · next @ ${money(t==='cod'||S.inspectOn===0&&!S.market.inspectUsed?(S.inspectOn===0&&!S.market.inspectUsed?0:S.prices[t]):S.prices[t])}</span>
+  </button>`;
+  const inspect = (S.inspectOn===0 && !S.market.inspectUsed)? `<div class="banner bad">Inspector on the dock — your first sale today is voided ($0).</div>`:"";
+  return `<div class="stage">
+    <h2>Your turn at the dock</h2>
+    <div class="hint">Each sale pushes that price <em>down</em> — dumping your whole hold crashes it. Hold fish for a better day, but they spoil overnight.</div>
+    ${inspect}
+    <div class="hold">
+      <span class="h"><span class="dot cod"></span> ${h.cod}</span>
+      <span class="h"><span class="dot bass"></span> ${h.bass}</span>
+      <span class="h"><span class="dot tuna"></span> ${h.tuna}</span>
+      <span class="h" style="color:var(--good)">earned ${money(made)}</span>
+    </div>
+    <div class="btnrow">${btn("cod")}${btn("bass")}${btn("tuna")}</div>
+    <div class="btnrow"><button class="btn primary" data-act="market-done">Done selling</button></div>
+  </div>`;
+}
+
+function stageNight(){
+  const S=STATE, N=S.night;
+  const last = S.day>=S.maxDays;
+  return `<div class="stage">
+    <h2>Nightfall · end of Day ${S.day}</h2>
+    ${N.crisis?`<div class="banner bad">The fishery is below the safe line (${N.health} fish). If it's still this low at season's end, everyone's earnings are halved.</div>`
+      :`<div class="banner good">The grounds are holding (${N.health} fish left).</div>`}
+    <div class="hint" style="margin-bottom:4px">
+      ${N.spoiled} fish spoiled unsold · ${N.bred} fish bred in healthy grounds · prices drifted back toward baseline.
+    </div>
+    <div class="btnrow"><button class="btn primary" data-act="next-day">${last?"Tally the season":"Sail into Day "+(S.day+1)}</button></div>
+  </div>`;
+}
+
+function stageOver(){
+  const S=STATE;
+  const ranked=S.players.slice().sort((a,b)=>S.cash[b.id]-S.cash[a.id]);
+  const win=ranked[0];
+  const rows=ranked.map((p,i)=>`<div class="row ${i===0?'win':''}">
+    <span><span class="chip" style="background:${p.color}"></span>${p.name}${i===0?" — top skipper":""}</span>
+    <span class="pval">${money(S.cash[p.id])}</span></div>`).join("");
+  return `<div class="stage results">
+    <h2>Season's end</h2>
+    ${S.collapsed?`<div class="banner bad">The sea collapsed — every skipper's earnings were halved. Nobody really wins on a dead fishery.</div>`
+      :`<div class="banner good">The grounds survived the season. Well fished.</div>`}
+    <div style="margin:10px 0">${rows}</div>
+    <div class="hint">${win.human?"You landed the biggest haul.":win.name+" out-fished you this time."}</div>
+    <div class="btnrow"><button class="btn primary" data-act="restart">New season</button></div>
+    <div class="legend">Greybox v0.1 — mechanics only. Next: does the market feel alive and the "one more cast" bite? Then multi-device TV + iPad.</div>
+  </div>`;
+}
+
+function setup(){
+  return `<div class="setup">
+    <div class="stage">
+      <h2>Overboard — mechanics greybox</h2>
+      <p>An ugly, playable slice of the fishing economy: pick grounds you can't fully see, press your luck reeling, then sell into a live market that crashes when everyone dumps — all while the sea can be fished to collapse. You skipper against AI rivals.</p>
+      <div class="field"><span class="label">Skippers (you + rivals)</span>
+        <select id="np"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
+      <div class="field"><span class="label">Season length (days)</span>
+        <select id="nd"><option>4</option><option selected>5</option><option>6</option></select></div>
+      <div class="btnrow" style="margin-top:16px"><button class="btn primary" data-act="start">Cast off</button></div>
+      <div class="legend">Rivals: Reef Hog (greedy — hoards, dumps), Old Salt (cautious — plays safe), Barnacle (chaos). They'll monkey the market for you.</div>
+    </div>
+  </div>`;
+}
+
+function render(){
+  const S=STATE;
+  const app=document.getElementById("app");
+  const tag=el("phaseTag");
+  if(!S){ app.innerHTML=setup(); if(tag)tag.textContent="new season"; return; }
+  let stage="";
+  const P=S.phase;
+  if(P==="sail") stage=stageSail();
+  else if(P==="reel") stage=stageReel();
+  else if(P==="market") stage=stageMarket();
+  else if(P==="night") stage=stageNight();
+  else if(P==="over"){ document.getElementById("app").innerHTML=stageOver(); if(tag)tag.textContent="season over"; return; }
+  const feed=`<div class="log"><h3>Ship's log</h3><div class="feed">${S.log.join("")||'<span class="ln">…</span>'}</div></div>`;
+  app.innerHTML = hud() + (P==="market"&&S.market.order[S.market.idx]!==0?bay(false):"") + stage + feed;
+  if(tag) tag.textContent = ({sail:"set sail",reel:"reeling",market:"at the dock",night:"nightfall"})[P]||"greybox v0.1";
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", e=>{
+  const b=e.target.closest("[data-act]"); if(!b) return;
+  const act=b.dataset.act;
+  if(act==="start"){ newGame(parseInt(el("np").value), parseInt(el("nd").value)); return; }
+  if(act==="pick"){ humanPick(b.dataset.spot); return; }
+  if(act==="reel-draw"){ humanReel("draw"); return; }
+  if(act==="reel-stop"){ humanReel("stop"); return; }
+  if(act==="sell"){ humanSell(b.dataset.type); return; }
+  if(act==="market-done"){ humanMarketDone(); return; }
+  if(act==="next-day"){ nextDay(); return; }
+  if(act==="restart"){ STATE=null; render(); return; }
+});
+
+render();
+</script>
