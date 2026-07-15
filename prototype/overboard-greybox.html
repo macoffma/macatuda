@@ -1,5 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <title>Overboard — Greybox v0.1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8E%A3</text></svg>">
 <style>
   /* ---- Maritime sonar-console greybox. Tokened for light/dark. ---- */
   :root{
@@ -145,6 +150,8 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
+</head>
+<body>
 <div class="wrap">
   <div class="mast">
     <div class="title">OVER<span class="sub">BOARD</span> <span class="ver">sonar console</span></div>
@@ -155,6 +162,12 @@
 
 <script>
 "use strict";
+/* Surface any runtime error into the page instead of a blank screen. */
+window.addEventListener("error", function(e){
+  var a=document.getElementById("app");
+  if(a && !a.dataset.crashed){ a.dataset.crashed="1";
+    a.innerHTML='<div class="stage"><h2>Something broke</h2><div class="hint mono">'+((e&&e.message)||"unknown error")+'</div></div>'; }
+});
 /* =========================================================================
    OVERBOARD — mechanics greybox
    Pure-ish engine (STATE + rules) kept separate from render() so it can later
@@ -721,5 +734,15 @@ document.addEventListener("click", e=>{
   if(act==="restart"){ STATE=null; render(); return; }
 });
 
-render();
+function boot(){
+  try { render(); }
+  catch(err){
+    var a=document.getElementById("app");
+    if(a){ a.innerHTML='<div class="stage"><h2>Boot error</h2><div class="hint mono">'+((err&&err.message)||err)+'</div></div>'; }
+  }
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", boot);
+else boot();
 </script>
+</body>
+</html>
