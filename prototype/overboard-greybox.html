@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Overboard — Greybox v0.2</title>
+<title>Overboard — Greybox v0.3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8E%A3</text></svg>">
 <style>
@@ -160,7 +160,7 @@
 <div class="wrap">
   <div class="mast">
     <div class="title">OVER<span class="sub">BOARD</span> <span class="ver">sonar console</span></div>
-    <div class="ver" id="phaseTag">greybox v0.2</div>
+    <div class="ver" id="phaseTag">greybox v0.3</div>
   </div>
   <div id="app"></div>
 </div>
@@ -185,15 +185,17 @@ window.addEventListener("error", function(e){
 const CFG = {
   maxDaysDefault: 5,
   hold: 5,
-  icebox: 2,             // fish you can carry overnight without spoiling
-  startCash: 5,
+  icebox: 2,             // fish you can carry overnight without an upgrade
+  iceUp: 6,              // icebox capacity after the Cold Hold upgrade
+  boatHold: 3,           // extra hold capacity from the Bigger Boat upgrade
+  startCash: 8,
   collapse: 18,          // sea-health red line
-  base:  { cod:1, bass:3, tuna:8 },
-  drop:  { cod:0, bass:1, tuna:2 },   // price fall per unit sold
-  floor: { cod:1, bass:1, tuna:3 },   // price cannot fall below
-  recover:{ bass:2, tuna:3 },         // overnight recovery toward baseline
-  capSold:{ bass:3, tuna:8 },         // recovery cap if sold today
-  capDry: { bass:4, tuna:10 },        // recovery cap if none sold (scarcity)
+  base:  { cod:2, bass:5, tuna:12 },
+  drop:  { cod:0, bass:2, tuna:4 },    // price fall per unit sold
+  floor: { cod:2, bass:2, tuna:4 },    // price cannot fall below
+  recover:{ bass:3, tuna:5 },          // overnight drift back toward baseline
+  capSold:{ bass:5, tuna:12 },         // recovery cap if sold today
+  capDry: { bass:7, tuna:18 },         // recovery cap if none sold (scarcity)
   spotsDef: [
     { id:"sa", name:"Shallows A", stock:{cod:4,bass:1,tuna:0}, snags:2, group:"shallows" },
     { id:"sb", name:"Shallows B", stock:{cod:4,bass:1,tuna:0}, snags:2, group:"shallows" },
@@ -213,10 +215,10 @@ const CFG = {
 
 const CONDITIONS = [
   { key:"calm",    text:"Calm seas — flat, quiet water. No effect.", apply(){} },
-  { key:"cannery", text:"Cannery order: bass fetches a premium today.",
-    apply(S){ S.prices.bass = Math.min(6, S.prices.bass + 2); } },
-  { key:"sushi",   text:"A sushi boat docks: tuna demand spikes today.",
-    apply(S){ S.prices.tuna = Math.min(12, S.prices.tuna + 3); } },
+  { key:"cannery", text:"Cannery order — bass fetches a big premium.",
+    apply(S){ S.prices.bass = Math.min(10, S.prices.bass + 4); } },
+  { key:"sushi",   text:"A sushi boat docks — tuna demand spikes hard.",
+    apply(S){ S.prices.tuna = Math.min(22, S.prices.tuna + 8); } },
   { key:"storm",   text:"Storm warning over the Shallows — those grounds are closed today.",
     apply(S){ S.closed = ["sa","sb"]; } },
   { key:"run",     text:"A bass run hits the Deep Reef — the water's boiling out there.",
@@ -225,11 +227,25 @@ const CONDITIONS = [
     apply(S){ const L=leaderId(S); S.inspectOn = L; } },
 ];
 
+/* What money is FOR — gear that earns you more for the rest of the season. */
+const UPGRADES = [
+  { key:"sonar", name:"Sonar rig",   cost:9,
+    desc:"See the exact fish in every ground before you pick — stop fishing blind." },
+  { key:"ice",   name:"Cold hold",   cost:12,
+    desc:"Carry 6 fish overnight instead of 2 — bank a haul and sell into a spike." },
+  { key:"boat",  name:"Bigger boat", cost:16,
+    desc:"+3 hold, so you land more on every single trip." },
+];
+
 let STATE = null;
 
 /* ---------- helpers ---------- */
 const sum = o => o.cod + o.bass + o.tuna;
 const clone = o => JSON.parse(JSON.stringify(o));
+function drawCond(){ return CONDITIONS[Math.floor(Math.random()*CONDITIONS.length)]; }
+function holdCap(id){ return CFG.hold + (STATE.up[id].boat?CFG.boatHold:0); }
+function iceCap(id){ return STATE.up[id].ice?CFG.iceUp:CFG.icebox; }
+function assetValue(id){ return UPGRADES.reduce((n,u)=> n+(STATE.up[id][u.key]?u.cost:0),0); }
 function leaderId(S){
   let best=0, id=S.players[0].id;
   S.players.forEach(p=>{ if(S.cash[p.id]>best){best=S.cash[p.id];id=p.id;} });
@@ -252,11 +268,11 @@ function newGame(nPlayers, days){
     const a = CFG.aiRoster[i];
     players.push({ id:i+1, name:a.name, human:false, pers:a.pers, color:a.color });
   }
-  const cash={}, hold={};
-  players.forEach(p=>{ cash[p.id]=CFG.startCash; hold[p.id]={cod:0,bass:0,tuna:0}; });
+  const cash={}, hold={}, up={};
+  players.forEach(p=>{ cash[p.id]=CFG.startCash; hold[p.id]={cod:0,bass:0,tuna:0}; up[p.id]={sonar:false,ice:false,boat:false}; });
   STATE = {
     day:1, maxDays:days, phase:"sail",
-    players, cash, hold,
+    players, cash, hold, up, nextCond:null,
     spots: CFG.spotsDef.map(s=>({ id:s.id, name:s.name, group:s.group,
       stock:clone(s.stock), snags:s.snags, start:clone(s.stock), visited:false })),
     prices: clone(CFG.base),
@@ -272,8 +288,9 @@ function startDay(){
   const S=STATE;
   S.phase="sail"; S.choices={}; S.closed=[]; S.inspectOn=null;
   S.soldToday={cod:0,bass:0,tuna:0}; S.prevPrices=clone(S.prices);
-  // draw a condition card, effect applies now (you read it before choosing)
-  S.cond = CONDITIONS[Math.floor(Math.random()*CONDITIONS.length)];
+  // today's conditions (applied now); tomorrow's forecast previews for planning holds
+  S.cond = S.nextCond || drawCond();
+  S.nextCond = drawCond();
   S.cond.apply(S);
   log(`<span class="ln"><b>— Day ${S.day} —</b> ${S.cond.text}</span>`);
   render();
@@ -360,7 +377,7 @@ function runSpotAuto(sid, boatIds){
 
 function aiReelTurn(id, spot, st){
   const S=STATE, p=S.players.find(x=>x.id===id), h=S.hold[id];
-  if(sum(h)>=CFG.hold){ st.active=false; return; }
+  if(sum(h)>=holdCap(id)){ st.active=false; return; }
   if(sum(spot.stock)<=0){ st.active=false; return; }
   let stopAt = p.pers==="cautious"?1 : p.pers==="greedy"?2 : 2;
   let go;
@@ -373,7 +390,7 @@ function aiReelTurn(id, spot, st){
     if(st.tension>=3){ // SNAP
       const b=bestFishInHold(h); if(b) h[b]--; st.active=false;
     }
-  } else if(tok){ h[tok]++; if(sum(h)>=CFG.hold) st.active=false; }
+  } else if(tok){ h[tok]++; if(sum(h)>=holdCap(id)) st.active=false; }
   else st.active=false;
 }
 
@@ -408,7 +425,7 @@ function humanReel(action){
   if(!st.active) return;
   if(action==="stop"){ st.active=false; R.lastDraw="You banked your hold."; }
   else {
-    if(sum(h)>=CFG.hold){ st.active=false; }
+    if(sum(h)>=holdCap(0)){ st.active=false; }
     else {
       const tok=drawToken(spot);
       if(tok==="snag"){
@@ -419,7 +436,7 @@ function humanReel(action){
           else R.lastDraw="SNAP! The line broke.";
           st.active=false;
         } else R.lastDraw=`Snag! Line tension rising (${st.tension}/3)…`;
-      } else if(tok){ h[tok]++; R.lastDraw=`Hauled a ${tok}.`; if(sum(h)>=CFG.hold){st.active=false; R.lastDraw+=" Hold full.";} }
+      } else if(tok){ h[tok]++; R.lastDraw=`Hauled a ${tok}.`; if(sum(h)>=holdCap(0)){st.active=false; R.lastDraw+=" Hold full.";} }
       else { st.active=false; R.lastDraw="Nothing left down there."; }
     }
   }
@@ -463,7 +480,7 @@ function processMarket(){
     aiSell(id);
     M.idx++;
   }
-  startNight();
+  startOutfit();
 }
 function aiSell(id){
   const S=STATE, p=S.players.find(x=>x.id===id), h=S.hold[id];
@@ -474,7 +491,7 @@ function aiSell(id){
   if(p.pers==="greedy"){ sellAll("cod"); sellAll("bass"); sellAll("tuna"); }
   else if(p.pers==="cautious"){
     sellAll("cod"); sellAll("bass");
-    if(S.prices.tuna>=6) sellAll("tuna"); // else hold, hope it recovers (risks spoilage)
+    if(S.prices.tuna>=9) sellAll("tuna"); // else ice it and hope for a spike
   } else { // chaos
     CFG.species.forEach(t=>{ if(Math.random()<0.6) sellAll(t); else sellSome(t, Math.floor(Math.random()*2)); });
   }
@@ -498,13 +515,42 @@ function humanMarketDone(){
   processMarket();
 }
 
+/* ---------- OUTFIT: spend cash on gear that compounds ---------- */
+function startOutfit(){
+  const S=STATE;
+  S.players.filter(p=>!p.human).forEach(p=>aiBuy(p.id));
+  S.phase="outfit"; render();
+}
+function aiBuy(id){
+  const S=STATE, p=S.players.find(x=>x.id===id);
+  const order = p.pers==="greedy" ? ["boat","ice","sonar"]
+              : p.pers==="cautious" ? ["ice","sonar","boat"]
+              : ["sonar","boat","ice"];
+  for(const k of order){
+    const u=UPGRADES.find(x=>x.key===k);
+    if(!S.up[id][k] && S.cash[id]>=u.cost){
+      S.cash[id]-=u.cost; S.up[id][k]=true;
+      log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> outfitted a <span class="a">${u.name}</span>.</span>`);
+      return;
+    }
+  }
+}
+function humanBuy(key){
+  const S=STATE, u=UPGRADES.find(x=>x.key===key);
+  if(!u || S.up[0][key] || S.cash[0]<u.cost) return;
+  S.cash[0]-=u.cost; S.up[0][key]=true;
+  log(`<span class="ln"><b style="color:${CFG.humanColor}">You</b> outfitted a <span class="a">${u.name}</span>.</span>`);
+  render();
+}
+function humanOutfitDone(){ startNight(); }
+
 /* ---------- NIGHT: spoilage, recovery, breeding, collapse ---------- */
 function startNight(){
   const S=STATE;
   // spoilage — you can ice up to CFG.icebox fish overnight (keeping the most valuable); the rest rot
   let spoiled=0;
   S.players.forEach(p=>{
-    const h=S.hold[p.id]; let keep=CFG.icebox;
+    const h=S.hold[p.id]; let keep=iceCap(p.id);
     ["tuna","bass","cod"].forEach(t=>{
       const iced=Math.min(h[t], keep); keep-=iced;
       const rot=h[t]-iced; if(rot>0){ h[t]=iced; spoiled+=rot; }
@@ -538,8 +584,7 @@ function nextDay(){
 }
 function endGame(){
   const S=STATE;
-  S.collapsed = seaHealth(S) < CFG.collapse;
-  if(S.collapsed) S.players.forEach(p=> S.cash[p.id]=Math.floor(S.cash[p.id]/2));
+  S.collapsed = seaHealth(S) < CFG.collapse;   // net worth (cash + boat gear) is scored in stageOver
   S.phase="over";
   render();
 }
@@ -567,9 +612,10 @@ function hud(){
       <span class="nm"><span class="dot ${t}"></span>${t[0].toUpperCase()+t.slice(1)}</span>
       <span><span class="pval">${money(S.prices[t])}</span>${priceDelta(t)}</span>
     </div>`).join("");
-  const stand = S.players.slice().sort((a,b)=>S.cash[b.id]-S.cash[a.id]).map(p=>`
-    <div class="p"><span><span class="chip" style="background:${p.color}"></span>${p.name}${p.human?"":` · <span style="color:var(--faint)">${p.pers}</span>`}</span>
-    <span class="pval">${money(S.cash[p.id])}</span></div>`).join("");
+  const stand = S.players.slice().sort((a,b)=>S.cash[b.id]-S.cash[a.id]).map(p=>{
+    const ups=["sonar","ice","boat"].filter(k=>S.up&&S.up[p.id]&&S.up[p.id][k]).length;
+    return `<div class="p"><span><span class="chip" style="background:${p.color}"></span>${p.name}${ups?` <span style="color:var(--faint)">▣${ups}</span>`:""}</span>
+    <span class="pval">${money(S.cash[p.id])}</span></div>`;}).join("");
   return `
   <div class="hud">
     <div class="card stat">
@@ -600,7 +646,7 @@ function bay(clickable){
     const dead=total<=1;
     const boats = Object.keys(S.choices).filter(id=>S.choices[id]===s.id)
       .map(id=>{const p=S.players.find(x=>x.id==id);return `<span class="bt" style="border-color:${p.color}">${p.name}</span>`}).join("");
-    const rem = s.visited ? `<div class="rem">
+    const rem = (s.visited || (STATE.up && STATE.up[0] && STATE.up[0].sonar)) ? `<div class="rem">
         <span><span class="dot cod"></span> <b>${s.stock.cod}</b></span>
         <span><span class="dot bass"></span> <b>${s.stock.bass}</b></span>
         ${s.start.tuna>0?`<span><span class="dot tuna"></span> <b>${s.stock.tuna}</b></span>`:""}
@@ -620,11 +666,12 @@ function bay(clickable){
 }
 
 function stageSail(){
+  const S=STATE, sonar=S.up[0].sonar;
   return `<div class="stage">
     <h2>Set sail</h2>
-    <div class="hint">${STATE.cond.text} &nbsp;·&nbsp; Pick your grounds — you can't see exactly what's down there until you fish it.</div>
+    <div class="hint"><b>Today:</b> ${S.cond.text} &nbsp;·&nbsp; ${sonar?"Your sonar shows the exact catch in every ground.":"Pick your grounds — you can't see exactly what's down there until you fish it."}</div>
     ${bay(true)}
-    <div class="legend">Rumor reads the water (Boiling → Fished out). ◆ = snag hazard (deep water breaks more lines). Tuna only runs the Reef &amp; the Trench.</div>
+    <div class="legend">Rumor reads the water (Boiling → Fished out). ◆ = snag hazard (deep water breaks more lines). Tuna only runs the Reef &amp; the Trench. &nbsp;·&nbsp; Tomorrow's forecast: <b>${S.nextCond?S.nextCond.text:"—"}</b></div>
   </div>`;
 }
 
@@ -686,12 +733,14 @@ function stageMarket(){
   }
   const made=S.marketMade||0;
   const inspectNow=(S.inspectOn===0 && !S.market.inspectUsed);
+  const spikeNext=t=> S.nextCond && ((S.nextCond.key==="sushi"&&t==="tuna")||(S.nextCond.key==="cannery"&&t==="bass"));
   const row=t=>{
     const cur=S.prices[t], proj=projRecover(t);
-    const ladder = t==="cod" ? `stays $1` : priceLadder(t,3).map(money).join(" → ")+(cur>CFG.floor[t]?" →…":"");
+    const ladder = t==="cod" ? `stays ${money(CFG.base.cod)}` : priceLadder(t,3).map(money).join(" → ")+(cur>CFG.floor[t]?" →…":"");
     const tip = t==="cod" ? "" :
-      (proj>cur ? `<span class="mtip up">↑ recovers to ~${money(proj)} tomorrow — icing a couple beats selling now</span>`
-                : `<span class="mtip">~${money(proj)} tomorrow</span>`);
+      spikeNext(t) ? `<span class="mtip up">↑ ${S.nextCond.key==="sushi"?"sushi boat":"cannery"} tomorrow — ice ${t} for the spike</span>`
+      : (proj>cur ? `<span class="mtip up">↑ recovers to ~${money(proj)} tomorrow — icing beats dumping</span>`
+                  : `<span class="mtip">~${money(proj)} tomorrow</span>`);
     const sellPrice = inspectNow ? 0 : cur;
     return `<div class="mrow">
       <button class="btn sell" data-act="sell" data-type="${t}" ${h[t]<=0?"disabled":""}>
@@ -703,18 +752,18 @@ function stageMarket(){
   const inspect = inspectNow? `<div class="banner bad">Inspector on the dock — your <b>first</b> sale today is voided ($0). Dump your cheapest fish first.</div>`:"";
   return `<div class="stage">
     <h2>Your turn at the dock</h2>
-    <div class="hint">Each sale walks that price <em>down the ladder</em> — dumping a whole hold crashes it. When a price is already crashed <b>below what it recovers to tomorrow</b>, ice a couple and sell them then instead.</div>
+    <div class="hint">Each sale walks that price <em>down the ladder</em> — dumping a whole hold crashes it. Ice fish (up to ${iceCap(0)}) to sell into a better market tomorrow. &nbsp;<b>Tomorrow:</b> ${S.nextCond?S.nextCond.text:"—"}</div>
     ${inspect}
     <div class="hold">
       <span class="h"><span class="dot cod"></span> ${h.cod}</span>
       <span class="h"><span class="dot bass"></span> ${h.bass}</span>
       <span class="h"><span class="dot tuna"></span> ${h.tuna}</span>
       <span class="h" style="color:var(--good)">earned ${money(made)}</span>
-      <span class="h" style="color:var(--faint)">icebox ${CFG.icebox}</span>
+      <span class="h" style="color:var(--faint)">icebox ${iceCap(0)}</span>
     </div>
     <div class="mtable">${row("cod")}${row("bass")}${row("tuna")}</div>
     <div class="btnrow"><button class="btn primary" data-act="market-done">Done selling</button></div>
-    <div class="legend">Cod is a flat $1 staple — steady floor income anyone can lean on. Bass &amp; tuna swing with supply. Sell into high prices; only ice fish (max ${CFG.icebox} overnight) when today's price is below tomorrow's.</div>
+    <div class="legend">Cod is a flat ${money(CFG.base.cod)} staple — steady floor income anyone can lean on. Bass &amp; tuna swing with supply. Sell into high prices; ice fish (max ${iceCap(0)}) when tomorrow pays more. Your earnings buy boat gear after this.</div>
   </div>`;
 }
 
@@ -726,27 +775,54 @@ function stageNight(){
     ${N.crisis?`<div class="banner bad">The fishery is below the safe line (${N.health} fish). If it's still this low at season's end, everyone's earnings are halved.</div>`
       :`<div class="banner good">The grounds are holding (${N.health} fish left).</div>`}
     <div class="hint" style="margin-bottom:4px">
-      ${N.spoiled} fish spoiled past the ${CFG.icebox}-fish icebox · ${N.bred} fish bred in healthy grounds · crashed prices drifted back up overnight.
+      ${N.spoiled} fish spoiled past the icebox · ${N.bred} fish bred in healthy grounds · crashed prices drifted back up overnight.
     </div>
+    ${last?"":`<div class="hint">Tomorrow's forecast: <b>${S.nextCond?S.nextCond.text:"—"}</b></div>`}
     <div class="btnrow"><button class="btn primary" data-act="next-day">${last?"Tally the season":"Sail into Day "+(S.day+1)}</button></div>
   </div>`;
 }
 
+function stageOutfit(){
+  const S=STATE, cash=S.cash[0];
+  const cards=UPGRADES.map(u=>{
+    const owned=S.up[0][u.key], afford=cash>=u.cost;
+    return `<div class="mrow">
+      <button class="btn sell" data-act="buy" data-key="${u.key}" ${(owned||!afford)?"disabled":""} style="min-width:210px">
+        <span><b>${u.name}</b> ${owned?'<span class="amt" style="color:var(--good)">· owned</span>':`<span class="amt">· ${money(u.cost)}</span>`}</span>
+        <span class="amt">${u.desc}</span>
+      </button>
+      ${owned?'<span class="mtip up">✓ fitted</span>':(afford?'':'<span class="mtip">not enough cash yet</span>')}
+    </div>`;
+  }).join("");
+  return `<div class="stage">
+    <h2>Outfit your boat · Day ${S.day}</h2>
+    <div class="hint">This is what the money's <em>for</em>: gear that earns you more for the rest of the season. Buy now, or bank the cash for something bigger.</div>
+    <div class="hold">
+      <span class="h" style="color:var(--good)">cash ${money(cash)}</span>
+      <span class="h" style="color:var(--faint)">hold ${holdCap(0)} · icebox ${iceCap(0)}${S.up[0].sonar?" · sonar":""}</span>
+    </div>
+    <div class="mtable">${cards}</div>
+    <div class="hint">Tomorrow's forecast: <b>${S.nextCond?S.nextCond.text:"—"}</b> — buy toward it.</div>
+    <div class="btnrow"><button class="btn primary" data-act="outfit-done">Done — into the night →</button></div>
+  </div>`;
+}
+
 function stageOver(){
-  const S=STATE;
-  const ranked=S.players.slice().sort((a,b)=>S.cash[b.id]-S.cash[a.id]);
+  const S=STATE, mult=S.collapsed?0.5:1;
+  const net={}; S.players.forEach(p=> net[p.id]=Math.floor((S.cash[p.id]+assetValue(p.id))*mult));
+  const ranked=S.players.slice().sort((a,b)=>net[b.id]-net[a.id]);
   const win=ranked[0];
   const rows=ranked.map((p,i)=>`<div class="row ${i===0?'win':''}">
     <span><span class="chip" style="background:${p.color}"></span>${p.name}${i===0?" — top skipper":""}</span>
-    <span class="pval">${money(S.cash[p.id])}</span></div>`).join("");
+    <span class="pval">${money(net[p.id])} <span class="amt" style="color:var(--faint)">(${money(Math.floor(S.cash[p.id]*mult))} cash + ${money(Math.floor(assetValue(p.id)*mult))} boat)</span></span></div>`).join("");
   return `<div class="stage results">
-    <h2>Season's end</h2>
-    ${S.collapsed?`<div class="banner bad">The sea collapsed — every skipper's earnings were halved. Nobody really wins on a dead fishery.</div>`
+    <h2>Season's end · net worth</h2>
+    ${S.collapsed?`<div class="banner bad">The sea collapsed — every skipper's net worth was halved. Nobody really wins on a dead fishery.</div>`
       :`<div class="banner good">The grounds survived the season. Well fished.</div>`}
     <div style="margin:10px 0">${rows}</div>
-    <div class="hint">${win.human?"You landed the biggest haul.":win.name+" out-fished you this time."}</div>
+    <div class="hint">${win.human?"You built the richest operation — cash plus the boat you outfitted.":win.name+" out-built you this time."}</div>
     <div class="btnrow"><button class="btn primary" data-act="restart">New season</button></div>
-    <div class="legend">Greybox v0.2 — clearer stakes &amp; a real sell-vs-hold call. Does the market read clearly now, and does "one more cast" bite? Then multi-device TV + iPad.</div>
+    <div class="legend">Greybox v0.3 — money now buys gear that compounds, stakes are wider, and you get a next-day forecast. Does timing &amp; investing feel like it matters now? Then multi-device TV + iPad.</div>
   </div>`;
 }
 
@@ -754,7 +830,7 @@ function setup(){
   return `<div class="setup">
     <div class="stage">
       <h2>Overboard — mechanics greybox</h2>
-      <p>An ugly, playable slice of the fishing economy: pick grounds you can't fully see, press your luck reeling, then sell into a live market that crashes when everyone dumps — all while the sea can be fished to collapse. You skipper against AI rivals.</p>
+      <p>An ugly, playable slice of the fishing economy: pick grounds you can't fully see, press your luck reeling, sell into a live market that crashes when everyone dumps, then spend your earnings on gear that earns you more — all while the sea can be fished to collapse. You skipper against AI rivals.</p>
       <div class="field"><span class="label">Skippers (you + rivals)</span>
         <select id="np"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
       <div class="field"><span class="label">Season length (days)</span>
@@ -775,11 +851,12 @@ function render(){
   if(P==="sail") stage=stageSail();
   else if(P==="reel") stage=stageReel();
   else if(P==="market") stage=stageMarket();
+  else if(P==="outfit") stage=stageOutfit();
   else if(P==="night") stage=stageNight();
   else if(P==="over"){ document.getElementById("app").innerHTML=stageOver(); if(tag)tag.textContent="season over"; return; }
   const feed=`<div class="log"><h3>Ship's log</h3><div class="feed">${S.log.join("")||'<span class="ln">…</span>'}</div></div>`;
   app.innerHTML = hud() + (P==="market"&&S.market.order[S.market.idx]!==0?bay(false):"") + stage + feed;
-  if(tag) tag.textContent = ({sail:"set sail",reel:"reeling",market:"at the dock",night:"nightfall"})[P]||"greybox v0.2";
+  if(tag) tag.textContent = ({sail:"set sail",reel:"reeling",market:"at the dock",outfit:"outfitting",night:"nightfall"})[P]||"greybox v0.3";
 }
 
 /* ---------- events ---------- */
@@ -791,6 +868,8 @@ document.addEventListener("click", e=>{
   if(act==="reel-draw"){ humanReel("draw"); return; }
   if(act==="reel-stop"){ humanReel("stop"); return; }
   if(act==="to-dock"){ endReel(); return; }
+  if(act==="buy"){ humanBuy(b.dataset.key); return; }
+  if(act==="outfit-done"){ humanOutfitDone(); return; }
   if(act==="sell"){ humanSell(b.dataset.type); return; }
   if(act==="market-done"){ humanMarketDone(); return; }
   if(act==="next-day"){ nextDay(); return; }
