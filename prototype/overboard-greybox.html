@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Overboard — Greybox v0.1</title>
+<title>Overboard — Greybox v0.2</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8E%A3</text></svg>">
 <style>
@@ -117,6 +117,11 @@
   .btn:disabled{opacity:.4;cursor:not-allowed}
   .btn.sell{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:120px}
   .btn.sell .amt{font-size:11px;color:var(--muted);font-weight:600}
+  .mtable{display:flex;flex-direction:column;gap:9px;margin:6px 0}
+  .mrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .mrow .btn.sell{flex:1 1 240px}
+  .mtip{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .mtip.up{color:var(--good)}
 
   /* Hold + tension */
   .hold{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:6px 0 4px}
@@ -155,7 +160,7 @@
 <div class="wrap">
   <div class="mast">
     <div class="title">OVER<span class="sub">BOARD</span> <span class="ver">sonar console</span></div>
-    <div class="ver" id="phaseTag">greybox v0.1</div>
+    <div class="ver" id="phaseTag">greybox v0.2</div>
   </div>
   <div id="app"></div>
 </div>
@@ -180,6 +185,7 @@ window.addEventListener("error", function(e){
 const CFG = {
   maxDaysDefault: 5,
   hold: 5,
+  icebox: 2,             // fish you can carry overnight without spoiling
   startCash: 5,
   collapse: 18,          // sea-health red line
   base:  { cod:1, bass:3, tuna:8 },
@@ -375,16 +381,25 @@ function reelStep(){
   const S=STATE, R=S.reel;
   let guard=0;
   while(guard++<400){
-    if(!R.order.some(id=>R.status[id].active)){ endReel(); return; }
+    if(!R.status[0].active){ humanReelEnded(); return; }   // human's reeling is done
     const id=R.order[R.ptr];
     const st=R.status[id];
     if(!st.active){ R.ptr=(R.ptr+1)%R.order.length; continue; }
-    const p=S.players.find(x=>x.id===id);
-    if(p.human){ render(); return; }        // wait for human input
+    if(id===0){ render(); return; }          // wait for human input
     aiReelTurn(id, S.spots.find(s=>s.id===R.spotId), st);
     R.ptr=(R.ptr+1)%R.order.length;
   }
-  endReel();
+  humanReelEnded();
+}
+function humanReelEnded(){
+  const S=STATE, R=S.reel; if(R.done) return;
+  const spot=S.spots.find(s=>s.id===R.spotId);
+  let guard=0;                               // let rivals finish working the same spot
+  while(R.order.some(id=>id!==0 && R.status[id].active) && guard++<400){
+    R.order.forEach(id=>{ if(id!==0 && R.status[id].active) aiReelTurn(id, spot, R.status[id]); });
+  }
+  R.done=true;                               // pause on a result screen so the outcome is readable
+  render();
 }
 
 function humanReel(action){
@@ -486,9 +501,15 @@ function humanMarketDone(){
 /* ---------- NIGHT: spoilage, recovery, breeding, collapse ---------- */
 function startNight(){
   const S=STATE;
-  // spoilage — anything unsold rots one of each species
+  // spoilage — you can ice up to CFG.icebox fish overnight (keeping the most valuable); the rest rot
   let spoiled=0;
-  S.players.forEach(p=>{ CFG.species.forEach(t=>{ if(S.hold[p.id][t]>0){ S.hold[p.id][t]--; spoiled++; } }); });
+  S.players.forEach(p=>{
+    const h=S.hold[p.id]; let keep=CFG.icebox;
+    ["tuna","bass","cod"].forEach(t=>{
+      const iced=Math.min(h[t], keep); keep-=iced;
+      const rot=h[t]-iced; if(rot>0){ h[t]=iced; spoiled+=rot; }
+    });
+  });
   // price recovery toward baseline
   ["bass","tuna"].forEach(t=>{
     const cap = S.soldToday[t]>0 ? CFG.capSold[t] : CFG.capDry[t];
@@ -609,50 +630,91 @@ function stageSail(){
 
 function stageReel(){
   const S=STATE, R=S.reel, st=R.status[0], h=S.hold[0], spot=S.spots.find(s=>s.id===R.spotId);
-  const pips=[0,1,2].map(i=>`<span class="pip ${st.tension>i?(i===2?'max':'on'):''}"></span>`).join("");
-  const full=sum(h)>=CFG.hold, done=!st.active;
-  const others = R.order.filter(id=>id!==0);
-  const crowd = others.length? `<div class="hint">Sharing ${spot.name} with ${others.map(id=>S.players.find(p=>p.id==id).name).join(", ")} — they're drawing from the same water between your casts.</div>`:"";
-  return `<div class="stage">
-    <h2>Reeling · ${spot.name}</h2>
-    <div class="hint">Cast for another fish, or bank what you've got. Three snags and the line snaps — you lose your best catch.</div>
-    ${crowd}
-    <div class="hold">
+  const holdRow=`<div class="hold">
       <span class="h"><span class="dot cod"></span> ${h.cod}</span>
       <span class="h"><span class="dot bass"></span> ${h.bass}</span>
       <span class="h"><span class="dot tuna"></span> ${h.tuna}</span>
       <span class="h" style="color:var(--faint)">hold ${sum(h)}/${CFG.hold}</span>
-    </div>
-    <div class="tension">${pips} <span class="label" style="margin-left:6px">line tension</span></div>
+    </div>`;
+  if(R.done){
+    return `<div class="stage">
+      <h2>Trip's end · ${spot.name}</h2>
+      <div class="draw-reveal" style="color:var(--ink);font-size:15px">${R.lastDraw||"You headed in with your catch."}</div>
+      ${holdRow}
+      <div class="hint">That's your catch for the day. Take it to the dock and sell.</div>
+      <div class="btnrow"><button class="btn primary" data-act="to-dock">Take the catch to the dock →</button></div>
+    </div>`;
+  }
+  const atRisk=bestFishInHold(h);
+  const pips=[0,1,2].map(i=>`<span class="pip ${st.tension>i?(i===2?'max':'on'):''}"></span>`).join("");
+  const full=sum(h)>=CFG.hold;
+  const others = R.order.filter(id=>id!==0);
+  const crowd = others.length? `<div class="hint">Sharing ${spot.name} with ${others.map(id=>S.players.find(p=>p.id==id).name).join(", ")} — they draw from the same water between your casts, so it thins out fast.</div>`:"";
+  const riskLine = st.tension>=2
+    ? `<div class="banner bad">Line's straining — <b>one more snag snaps it</b>${atRisk?` and your <b>${atRisk}</b> gets away`:""}. Bank now, or gamble.</div>`
+    : `<div class="hint">A snap (3 snags) costs your best fish${atRisk?` — right now that's your <b>${atRisk}</b>`:", but your hold is empty so there's nothing to lose yet"}.</div>`;
+  return `<div class="stage">
+    <h2>Reeling · ${spot.name}</h2>
+    <div class="hint">Every cast lands a fish <em>or</em> a snag. Push for more, or bank what you've got — the more you're holding, the more a snap costs you.</div>
+    ${crowd}
+    ${holdRow}
+    <div class="tension">${pips} <span class="label" style="margin-left:6px">line tension ${st.tension}/3</span></div>
+    ${riskLine}
     <div class="draw-reveal">${R.lastDraw||"&nbsp;"}</div>
     <div class="btnrow">
-      <button class="btn primary" data-act="reel-draw" ${(full||done)?"disabled":""}>Cast again</button>
-      <button class="btn" data-act="reel-stop" ${done?"disabled":""}>Bank hold &amp; head to dock</button>
+      <button class="btn primary" data-act="reel-draw" ${full?"disabled":""}>${st.tension>=2?"Cast again ⚠ (risky)":"Cast again"}</button>
+      <button class="btn" data-act="reel-stop">Bank hold &amp; head to dock</button>
     </div>
   </div>`;
 }
 
+function projRecover(t){
+  if(t==="cod") return 1;
+  const cap = STATE.soldToday[t]>0 ? CFG.capSold[t] : CFG.capDry[t];
+  return Math.min(cap, STATE.prices[t]+CFG.recover[t]);
+}
+function priceLadder(t,n){
+  let p=STATE.prices[t], out=[];
+  for(let i=0;i<n;i++){ out.push(p); p=Math.max(CFG.floor[t], p-CFG.drop[t]); }
+  return out;
+}
 function stageMarket(){
   const S=STATE, myTurn=S.market.order[S.market.idx]===0, h=S.hold[0];
-  if(!myTurn){ return `<div class="stage"><h2>At the dock</h2><div class="hint">Rivals are selling first — watch the prices move.</div></div>`; }
+  if(!myTurn){
+    const who=S.players.find(p=>p.id===S.market.order[S.market.idx]);
+    return `<div class="stage"><h2>At the dock</h2><div class="hint">${who?who.name:"A rival"} is selling first — watch the prices drop as they unload, and think about what'll be cheap when it's your turn.</div></div>`;
+  }
   const made=S.marketMade||0;
-  const btn=t=>`<button class="btn sell" data-act="sell" data-type="${t}" ${h[t]<=0?"disabled":""}>
-    <span><span class="dot ${t}"></span> Sell ${t}</span>
-    <span class="amt">have ${h[t]} · next @ ${money(t==='cod'||S.inspectOn===0&&!S.market.inspectUsed?(S.inspectOn===0&&!S.market.inspectUsed?0:S.prices[t]):S.prices[t])}</span>
-  </button>`;
-  const inspect = (S.inspectOn===0 && !S.market.inspectUsed)? `<div class="banner bad">Inspector on the dock — your first sale today is voided ($0).</div>`:"";
+  const inspectNow=(S.inspectOn===0 && !S.market.inspectUsed);
+  const row=t=>{
+    const cur=S.prices[t], proj=projRecover(t);
+    const ladder = t==="cod" ? `stays $1` : priceLadder(t,3).map(money).join(" → ")+(cur>CFG.floor[t]?" →…":"");
+    const tip = t==="cod" ? "" :
+      (proj>cur ? `<span class="mtip up">↑ recovers to ~${money(proj)} tomorrow — icing a couple beats selling now</span>`
+                : `<span class="mtip">~${money(proj)} tomorrow</span>`);
+    const sellPrice = inspectNow ? 0 : cur;
+    return `<div class="mrow">
+      <button class="btn sell" data-act="sell" data-type="${t}" ${h[t]<=0?"disabled":""}>
+        <span><span class="dot ${t}"></span> Sell ${t} <span class="amt">· ${h[t]} in hold</span></span>
+        <span class="amt">get ${money(sellPrice)} now, then ${ladder}</span>
+      </button>${tip}
+    </div>`;
+  };
+  const inspect = inspectNow? `<div class="banner bad">Inspector on the dock — your <b>first</b> sale today is voided ($0). Dump your cheapest fish first.</div>`:"";
   return `<div class="stage">
     <h2>Your turn at the dock</h2>
-    <div class="hint">Each sale pushes that price <em>down</em> — dumping your whole hold crashes it. Hold fish for a better day, but they spoil overnight.</div>
+    <div class="hint">Each sale walks that price <em>down the ladder</em> — dumping a whole hold crashes it. When a price is already crashed <b>below what it recovers to tomorrow</b>, ice a couple and sell them then instead.</div>
     ${inspect}
     <div class="hold">
       <span class="h"><span class="dot cod"></span> ${h.cod}</span>
       <span class="h"><span class="dot bass"></span> ${h.bass}</span>
       <span class="h"><span class="dot tuna"></span> ${h.tuna}</span>
       <span class="h" style="color:var(--good)">earned ${money(made)}</span>
+      <span class="h" style="color:var(--faint)">icebox ${CFG.icebox}</span>
     </div>
-    <div class="btnrow">${btn("cod")}${btn("bass")}${btn("tuna")}</div>
+    <div class="mtable">${row("cod")}${row("bass")}${row("tuna")}</div>
     <div class="btnrow"><button class="btn primary" data-act="market-done">Done selling</button></div>
+    <div class="legend">Cod is a flat $1 staple — steady floor income anyone can lean on. Bass &amp; tuna swing with supply. Sell into high prices; only ice fish (max ${CFG.icebox} overnight) when today's price is below tomorrow's.</div>
   </div>`;
 }
 
@@ -664,7 +726,7 @@ function stageNight(){
     ${N.crisis?`<div class="banner bad">The fishery is below the safe line (${N.health} fish). If it's still this low at season's end, everyone's earnings are halved.</div>`
       :`<div class="banner good">The grounds are holding (${N.health} fish left).</div>`}
     <div class="hint" style="margin-bottom:4px">
-      ${N.spoiled} fish spoiled unsold · ${N.bred} fish bred in healthy grounds · prices drifted back toward baseline.
+      ${N.spoiled} fish spoiled past the ${CFG.icebox}-fish icebox · ${N.bred} fish bred in healthy grounds · crashed prices drifted back up overnight.
     </div>
     <div class="btnrow"><button class="btn primary" data-act="next-day">${last?"Tally the season":"Sail into Day "+(S.day+1)}</button></div>
   </div>`;
@@ -684,7 +746,7 @@ function stageOver(){
     <div style="margin:10px 0">${rows}</div>
     <div class="hint">${win.human?"You landed the biggest haul.":win.name+" out-fished you this time."}</div>
     <div class="btnrow"><button class="btn primary" data-act="restart">New season</button></div>
-    <div class="legend">Greybox v0.1 — mechanics only. Next: does the market feel alive and the "one more cast" bite? Then multi-device TV + iPad.</div>
+    <div class="legend">Greybox v0.2 — clearer stakes &amp; a real sell-vs-hold call. Does the market read clearly now, and does "one more cast" bite? Then multi-device TV + iPad.</div>
   </div>`;
 }
 
@@ -717,7 +779,7 @@ function render(){
   else if(P==="over"){ document.getElementById("app").innerHTML=stageOver(); if(tag)tag.textContent="season over"; return; }
   const feed=`<div class="log"><h3>Ship's log</h3><div class="feed">${S.log.join("")||'<span class="ln">…</span>'}</div></div>`;
   app.innerHTML = hud() + (P==="market"&&S.market.order[S.market.idx]!==0?bay(false):"") + stage + feed;
-  if(tag) tag.textContent = ({sail:"set sail",reel:"reeling",market:"at the dock",night:"nightfall"})[P]||"greybox v0.1";
+  if(tag) tag.textContent = ({sail:"set sail",reel:"reeling",market:"at the dock",night:"nightfall"})[P]||"greybox v0.2";
 }
 
 /* ---------- events ---------- */
@@ -728,6 +790,7 @@ document.addEventListener("click", e=>{
   if(act==="pick"){ humanPick(b.dataset.spot); return; }
   if(act==="reel-draw"){ humanReel("draw"); return; }
   if(act==="reel-stop"){ humanReel("stop"); return; }
+  if(act==="to-dock"){ endReel(); return; }
   if(act==="sell"){ humanSell(b.dataset.type); return; }
   if(act==="market-done"){ humanMarketDone(); return; }
   if(act==="next-day"){ nextDay(); return; }
