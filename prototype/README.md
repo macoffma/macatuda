@@ -3,16 +3,18 @@
 Two self-contained, single-file prototypes of the same tuned engine, different
 skins. Open either in any browser (phone, iPad, laptop) — no build, no install.
 
-- **`the-block-greybox.html` — The Block (current direction, v0.2).** A
-  neighborhood summer hustle on a **procedural map**. Roam a block that's
-  different every game, take odd jobs (mow, rake, babysit, lemonade), do them well
-  for tips, chase what the weather makes pay double, and keep the block happy.
-  Key systems: base pay is a safe floor and **tips are the press-your-luck**;
-  a **Daylight budget** is the master scarcity (travel + doing a job + each polish
-  all spend it, so "why not max out?" is answered by time); the map's **distances
-  and house quirks** are learned each game; heading for the **same door as a rival
-  is a race** (closest wins, the other wastes the trip — the M.U.L.E. plot-grab);
-  and the commons is **Neighborhood Goodwill** (a happy block pays everyone more).
+- **`the-block-greybox.html` — The Block (current direction, v0.3).** A
+  neighborhood summer hustle on a **procedural map** — you *drum up* work, you
+  don't pick it off a board. Key systems: **knock on doors** to prospect (read a
+  house's cues — 🌿 lawn, 🧸 kids, 🐕 dog, 🍂 leaves, 🚗 car — plus the weather to
+  guess who's hiring; a bad read gets "not today" and a wasted walk); **set up
+  your own stand** (lemonade/cider) at a corner as your weather-driven venture;
+  base pay is a safe floor with **tips as the press-your-luck**; a **Daylight
+  budget** is the master scarcity (travel + jobs + each polish all spend it, so
+  milking a neighbor trades against reaching another); the map's **distances and
+  house quirks** are learned each game; heading for the **same door/corner as a
+  rival is a race** (closest wins — the M.U.L.E. plot-grab); and the commons is
+  **Neighborhood Goodwill** (a happy block pays everyone more).
 - **`overboard-greybox.html` — Overboard (earlier fishing version).** Kept for
   reference; same core loop with a fishing skin. The notes below describe it.
 

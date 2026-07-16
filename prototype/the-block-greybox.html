@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>The Block — Greybox v0.2</title>
+<title>The Block — Greybox v0.3</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%98%EF%B8%8F</text></svg>">
 <style>
@@ -15,14 +15,9 @@
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
     --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   }
-  @media (prefers-color-scheme:dark){
-    :root{ --ground:#0d1510; --panel:#142016; --panel-2:#182a1c; --line:#2a3d2c;
-      --ink:#dcecd6; --muted:#8ba283; --faint:#5d7358; --accent:#5cc47f; --sky:#5cb4e6; --gold:#e5c264; --road:#20301f;
-      --good:#5cc47f; --warn:#e0b055; --bad:#e0736b; --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35); }
-  }
+  @media (prefers-color-scheme:dark){ :root{ --ground:#0d1510; --panel:#142016; --panel-2:#182a1c; --line:#2a3d2c; --ink:#dcecd6; --muted:#8ba283; --faint:#5d7358; --accent:#5cc47f; --sky:#5cb4e6; --gold:#e5c264; --road:#20301f; --good:#5cc47f; --warn:#e0b055; --bad:#e0736b; --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);} }
   :root[data-theme="light"]{ --ground:#eef3ec; --panel:#fbfdf9; --panel-2:#eef4ea; --line:#d3ddca; --ink:#1e2b1c; --muted:#5b6b53; --faint:#93a389; --accent:#2f9e5c; --sky:#2b8fd6; --gold:#c9971e; --road:#dfe6d6; --good:#2f9e5c; --warn:#c9871e; --bad:#c6504a; --shadow:0 1px 0 rgba(0,0,0,.03),0 8px 22px rgba(30,50,20,.07); }
   :root[data-theme="dark"]{ --ground:#0d1510; --panel:#142016; --panel-2:#182a1c; --line:#2a3d2c; --ink:#dcecd6; --muted:#8ba283; --faint:#5d7358; --accent:#5cc47f; --sky:#5cb4e6; --gold:#e5c264; --road:#20301f; --good:#5cc47f; --warn:#e0b055; --bad:#e0736b; --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35); }
-
   *{box-sizing:border-box}
   body{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.45;margin:0;-webkit-text-size-adjust:100%}
   .wrap{max-width:940px;margin:0 auto;padding:16px 16px 64px}
@@ -33,7 +28,6 @@
   .mast{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:14px;flex-wrap:wrap}
   .mast .title{font-size:21px;font-weight:800} .mast .title .sub{color:var(--accent)}
   .mast .ver{font-size:11px;color:var(--faint);letter-spacing:.12em;text-transform:uppercase}
-
   .hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
   .stat .big{font-size:24px;font-weight:800;font-family:var(--mono)}
@@ -47,26 +41,22 @@
   .stand .p{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
   .chip{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:middle}
   .cash{font-family:var(--mono);font-weight:800}
-
-  /* Neighborhood map */
-  .map{position:relative;background:var(--road);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
-    width:100%;aspect-ratio:7/4.4;margin:6px 0 12px;overflow:hidden}
+  .map{position:relative;background:var(--road);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:100%;aspect-ratio:7/4.4;margin:6px 0 12px;overflow:hidden}
   .map .grid{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:14.28% 20%;opacity:.35}
-  .house{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;
-    border:0;background:transparent;color:inherit;padding:0;min-width:52px}
-  .house .pin{width:34px;height:34px;border-radius:9px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow)}
-  button.house:not(:disabled) .pin{border-color:var(--accent);cursor:pointer}
-  button.house:not(:disabled):hover .pin{transform:translateY(-2px)}
-  .house.hot .pin{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
-  .house.taken{opacity:.45} .house.nojob .pin{opacity:.5;font-size:15px}
-  .house .cap{font-size:10px;font-weight:700;white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 5px;line-height:16px}
-  .house .cap.gold{color:var(--gold);border-color:var(--gold)}
+  .node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:transparent;color:inherit;padding:0;min-width:54px}
+  .node .pin{width:36px;height:36px;border-radius:9px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow);position:relative}
+  button.node:not(:disabled) .pin{border-color:var(--accent);cursor:pointer}
+  button.node:not(:disabled):hover .pin{transform:translateY(-2px)}
+  .node.need .pin{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+  .node.corner .pin{border-radius:50%;background:color-mix(in srgb,var(--sky) 18%,var(--panel))}
+  .node.done{opacity:.4}
+  .node .cues{position:absolute;top:-8px;right:-8px;font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 3px;line-height:15px}
+  .node .cap{font-size:10px;font-weight:700;white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 5px;line-height:16px}
+  .node .cap.gold{color:var(--gold);border-color:var(--gold)}
   .kid{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);z-index:3;font-size:10px;display:flex;align-items:center;justify-content:center;pointer-events:none}
   .maplegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:-4px 0 10px}
-
   .stage{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
-  .stage h2{font-size:16px;margin-bottom:5px}
-  .stage .hint{color:var(--muted);font-size:13.5px;margin-bottom:12px}
+  .stage h2{font-size:16px;margin-bottom:5px} .stage .hint{color:var(--muted);font-size:13.5px;margin-bottom:12px}
   .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
   .btn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink);padding:11px 18px;border-radius:10px;font-size:14px;font-weight:700}
   .btn:hover{border-color:var(--accent)} .btn.primary{background:var(--accent);border-color:var(--accent);color:#03210f} .btn.primary:hover{filter:brightness(1.07)}
@@ -104,44 +94,39 @@ window.addEventListener("error", function(e){ var a=document.getElementById("app
   if(a && !a.dataset.crashed){ a.dataset.crashed="1"; a.innerHTML='<div class="stage"><h2>Something broke</h2><div class="hint">'+((e&&e.message)||"error")+'</div></div>'; } });
 
 /* =========================================================================
-   THE BLOCK v0.2 — now on a procedural neighborhood MAP with a DAYLIGHT budget.
-   - Daylight is the master scarcity: travel + doing a job + each polish spends it.
-     "Why not max out?" -> every touch is an hour you can't spend elsewhere.
-   - The map is generated each game (houses + quirks you learn). Distance = time.
-   - Head for the same door as a rival and it's a RACE: closest wins, the other
-     wastes the trip. (The M.U.L.E. plot-grab.)
+   THE BLOCK v0.3 — you HUSTLE, you don't pick jobs off a board.
+   - Knock on doors to drum up work: read a house's CUES (🌿 lawn, 🧸 kids,
+     🐕 dog, 🍂 leaves, 🚗 car) + the weather to guess who's hiring. A good
+     read gets you the job; a bad one gets you "not today" and a wasted walk.
+   - Set up YOUR OWN stand (lemonade/cider) at a corner — your venture, booming
+     on a hot day, meager in the rain. Your fallback when the doors are quiet.
+   Daylight budget, procedural map, and door/corner races all carry over.
    ========================================================================= */
 
-const JOB = {
-  mow:  { name:"Mow a lawn",     em:"🌱", touches:["edge it crisp","bag the clippings","trim the border"] },
-  rake: { name:"Rake leaves",    em:"🍂", touches:["bag them neat","clear the gutters","sweep the path"] },
-  lemon:{ name:"Lemonade stand", em:"🍋", touches:["add fresh mint","upsell cookies","work the crowd"] },
+const SVC = {
+  mow:  { name:"Mow the lawn",   em:"🌱", touches:["edge it crisp","bag the clippings","trim the border"] },
+  rake: { name:"Rake the leaves",em:"🍂", touches:["bag them neat","clear the gutters","sweep the path"] },
   sit:  { name:"Babysit",        em:"🧸", touches:["build a pillow fort","bake with the kids","one more story"] },
-  wash: { name:"Wash a car",     em:"🧽", touches:["wax the hood","vacuum inside","shine the rims"] },
-  dog:  { name:"Walk the dogs",  em:"🐕", touches:["extra-long loop","teach a trick","brush them out"] },
+  wash: { name:"Wash the car",   em:"🧽", touches:["wax the hood","vacuum inside","shine the rims"] },
+  dog:  { name:"Walk the dog",   em:"🐕", touches:["extra-long loop","teach a trick","brush it out"] },
 };
-const JOBKEYS=Object.keys(JOB);
+const TRAIT = { lawn:{em:"🌿",svc:"mow"}, leaf:{em:"🍂",svc:"rake"}, kids:{em:"🧸",svc:"sit"}, dog:{em:"🐕",svc:"dog"}, car:{em:"🚗",svc:"wash"} };
+const TRAITKEYS=Object.keys(TRAIT);
 const FAMS=["Reyes","Okafor","Nguyen","Patel","Brooks","Ivanov","Cohen","Diaz","Murphy","Kim","Santos","Webb"];
 const WEATHER=[
-  { key:"heat",  em:"🥵", text:"Heat wave — everyone's parched and cars are dusty.", boosts:["lemon","wash"] },
-  { key:"sun",   em:"☀️", text:"Sunny and mild — grass is growing, dogs need walking.", boosts:["mow","dog"] },
-  { key:"leaves",em:"🍂", text:"Leaves coming down all over the block.", boosts:["rake"] },
-  { key:"rain",  em:"🌧️", text:"Rainy day — folks want a hand indoors.", boosts:["sit"] },
-  { key:"party", em:"🎉", text:"Block party this weekend — everybody needs help!", boosts:["lemon","sit","wash","mow"] },
+  { key:"heat",  em:"🥵", text:"Heat wave — everyone's parched and cars are dusty.", boosts:["wash"], stand:3, prod:"lemonade" },
+  { key:"sun",   em:"☀️", text:"Sunny and mild — grass is growing, dogs need walking.", boosts:["mow","dog"], stand:2, prod:"lemonade" },
+  { key:"leaves",em:"🍂", text:"Leaves coming down all over the block.", boosts:["rake"], stand:1, prod:"cider" },
+  { key:"rain",  em:"🌧️", text:"Rainy day — folks want a hand indoors.", boosts:["sit"], stand:1, prod:"cocoa" },
+  { key:"party", em:"🎉", text:"Block party this weekend — everyone's out and about!", boosts:["sit","wash","mow","dog"], stand:3, prod:"lemonade" },
 ];
-const QUIRK={
-  none:  { tag:"", basePay:0, tipMul:1, flub:0 },
-  rich:  { tag:"big tippers", basePay:2, tipMul:1, flub:0 },
-  grumpy:{ tag:"tight with tips", basePay:0, tipMul:0.5, flub:0 },
-  wild:  { tag:"a real handful", basePay:1, tipMul:1, flub:0.18 },
-};
+const QUIRK={ none:{tag:"",basePay:0,tipMul:1,flub:0}, rich:{tag:"big tippers",basePay:2,tipMul:1,flub:0}, grumpy:{tag:"tight with tips",basePay:0,tipMul:0.5,flub:0}, wild:{tag:"a real handful",basePay:1,tipMul:1,flub:0.18} };
 const GEAR=[
-  { key:"flyers",  name:"Flyers & a good rep", cost:7, em:"📋", desc:"See each house's pay, quirk & travel time before you go." },
+  { key:"flyers",  name:"Flyers & a good rep", cost:7, em:"📋", desc:"Word gets around — you'll know who's hiring before you knock." },
   { key:"careful", name:"Careful hands",       cost:8, em:"🧤", desc:"Flubs come slower — polish for tips more safely." },
-  { key:"bike",    name:"A bike",              cost:10,em:"🚲", desc:"Travel takes half the time — reach more of the map." },
+  { key:"bike",    name:"A bike",              cost:10,em:"🚲", desc:"Travel takes half the time — cover more of the block." },
 ];
-const CFG={ startCash:5, days:5, daylight:12, jobTime:2, touchTime:1, tip:2, goodwill0:6, gwMax:10, soured:3, boostMult:2,
-  gridW:7, gridH:5, houses:10 };
+const CFG={ startCash:5, days:5, daylight:12, jobTime:2, touchTime:1, standSetup:1, tip:2, goodwill0:6, gwMax:10, soured:3, boostMult:2, gridW:7, gridH:5, houses:9, corners:2 };
 
 let STATE=null;
 const rnd=n=>Math.floor(Math.random()*n);
@@ -149,237 +134,265 @@ const pick=a=>a[rnd(a.length)];
 const cash=n=>"$"+n;
 function log(h){ STATE.log.unshift(h); if(STATE.log.length>50)STATE.log.pop(); }
 function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
-function travelH(id,house){ let h=Math.max(1,Math.round(dist(STATE.pos[id],house)/1.7)); if(STATE.gear[id].bike)h=Math.max(1,Math.round(h/2)); return h; }
-function availJobs(){ return STATE.houses.filter(h=>h.job && !h.job.taken); }
+function travelH(id,node){ let h=Math.max(1,Math.round(dist(STATE.pos[id],node)/1.7)); if(STATE.gear[id].bike)h=Math.max(1,Math.round(h/2)); return h; }
 
 function newGame(np, days){
   const players=[{id:0,name:"You",human:true,color:"#2f9e5c"}];
   const roster=[{name:"Chip",pers:"greedy",color:"#c6504a"},{name:"Dot",pers:"cautious",color:"#2b8fd6"},{name:"Bax",pers:"chaos",color:"#9a6cc9"}];
   for(let i=0;i<np-1;i++){ const a=roster[i]; players.push({id:i+1,name:a.name,human:false,pers:a.pers,color:a.color}); }
   const money={},gear={}; players.forEach(p=>{ money[p.id]=CFG.startCash; gear[p.id]={flyers:false,careful:false,bike:false}; });
-  // procedural map: distinct grid cells, persistent quirks
   const cells=[]; for(let x=0;x<CFG.gridW;x++)for(let y=0;y<CFG.gridH;y++)cells.push({x,y});
   for(let i=cells.length-1;i>0;i--){ const j=rnd(i+1); const t=cells[i];cells[i]=cells[j];cells[j]=t; }
-  const houses=[]; const fams=FAMS.slice();
-  for(let i=0;i<CFG.houses;i++){ const c=cells[i]; const q=Math.random()<0.4?pick(["rich","grumpy","wild"]):"none";
-    houses.push({ id:i, x:c.x, y:c.y, fam:fams.splice(rnd(fams.length),1)[0]||("#"+i), quirk:q, seen:false, job:null }); }
-  const home=cells[CFG.houses]||{x:0,y:2};                 // your stoop
-  const aiHomes=[cells[CFG.houses+1]||{x:6,y:0}, cells[CFG.houses+2]||{x:6,y:4}, cells[CFG.houses+3]||{x:0,y:4}];
+  let ci=0; const fams=FAMS.slice();
+  const houses=[]; for(let i=0;i<CFG.houses;i++){ const c=cells[ci++];
+    const nt=1+(Math.random()<0.5?1:0), traits=[]; while(traits.length<nt){ const t=pick(TRAITKEYS); if(!traits.includes(t))traits.push(t); }
+    const q=Math.random()<0.4?pick(["rich","grumpy","wild"]):"none";
+    houses.push({ id:i, kind:"house", x:c.x, y:c.y, fam:fams.splice(rnd(fams.length),1)[0]||("#"+i), traits, quirk:q, seen:false, need:null, done:false }); }
+  const corners=[]; const cnames=["the busy corner","the park gate","the pool entrance"];
+  for(let i=0;i<CFG.corners;i++){ const c=cells[ci++]; corners.push({ id:100+i, kind:"corner", x:c.x, y:c.y, name:cnames[i]||"a corner", traffic:2+rnd(2), takenBy:null }); }
+  const home=cells[ci++]||{x:0,y:2};
+  const aiHomes=[cells[ci++]||{x:6,y:0},cells[ci++]||{x:6,y:4},cells[ci++]||{x:0,y:4}];
   const pos={0:{x:home.x,y:home.y}}; players.forEach((p,i)=>{ if(!p.human) pos[p.id]={x:aiHomes[i-1].x,y:aiHomes[i-1].y}; });
   STATE={ day:1, maxDays:days, phase:"map", players, money, gear, goodwill:CFG.goodwill0,
-    weather:null, nextWeather:pick(WEATHER), houses, home, pos, daylight:{}, work:null, pay:null, night:null, log:[], lastBeat:"" };
+    weather:null, nextWeather:pick(WEATHER), houses, corners, home, pos, daylight:{}, work:null, standRun:null, pay:null, night:null, log:[], notice:"" };
   startDay();
 }
 function startDay(){
   const S=STATE;
   S.weather=S.nextWeather||pick(WEATHER); S.nextWeather=pick(WEATHER);
-  S.players.forEach(p=>{ S.daylight[p.id]=CFG.daylight; S.pos[p.id]={x:(p.human?S.home:S.pos[p.id]).x,y:(p.human?S.home:S.pos[p.id]).y}; });
+  S.players.forEach(p=>{ S.daylight[p.id]=CFG.daylight; });
   S.pos[0]={x:S.home.x,y:S.home.y};
-  // post jobs on random houses
-  S.houses.forEach(h=>h.job=null);
-  const pool=S.houses.slice(); for(let i=pool.length-1;i>0;i--){const j=rnd(i+1);const t=pool[i];pool[i]=pool[j];pool[j]=t;}
-  const n=Math.min(pool.length, S.players.length*2+3);
-  for(let i=0;i<n;i++){ const h=pool[i]; h.job={ type:pick(JOBKEYS), base:3+rnd(4), taken:false, takenBy:null }; }
-  S.lastBeat="";
+  S.corners.forEach(c=>c.takenBy=null);
+  // who needs work today: strongly tied to a house's cues + weather (so you can read it)
+  S.houses.forEach(h=>{ h.done=false; h.need=null;
+    const svcs=h.traits.map(t=>TRAIT[t].svc), aligned=svcs.some(s=>S.weather.boosts.includes(s));
+    const p=0.5+(aligned?0.32:0)+(h.quirk==="rich"?0.1:0);
+    if(Math.random()<p){ const boosted=svcs.filter(s=>S.weather.boosts.includes(s)); h.need=boosted.length?pick(boosted):pick(svcs); }
+  });
+  S.notice="";
   log(`<span class="ln"><b>— Day ${S.day} —</b> ${S.weather.em} ${S.weather.text}</span>`);
   S.phase="map"; render();
 }
-function jobPay(h){ // base incl. quirk + weather + live goodwill
-  let p=h.job.base + QUIRK[h.quirk].basePay;
-  if(STATE.weather.boosts.includes(h.job.type)) p*=CFG.boostMult;
-  if(STATE.goodwill>=8) p+=1; else if(STATE.goodwill<=CFG.soured) p=Math.max(1,p-1);
-  return p;
-}
-function jobValueFor(id,h){ return jobPay(h) - travelH(id,h)*1.2; }        // rough desirability
-function bestJobFor(id){ const a=availJobs().filter(h=>travelH(id,h)+CFG.jobTime<=STATE.daylight[id]);
-  if(!a.length)return null; return a.slice().sort((x,y)=>jobValueFor(id,y)-jobValueFor(id,x))[0]; }
+function servicePay(h){ let p=3+rnd(3)+QUIRK[h.quirk].basePay; if(STATE.weather.boosts.includes(h.need))p*=CFG.boostMult;
+  if(STATE.goodwill>=8)p+=1; else if(STATE.goodwill<=CFG.soured)p=Math.max(1,p-1); return p; }
+function standEstimate(c){ return Math.round(c.traffic*STATE.weather.stand*2.2); }
+function targetValue(id,node){ const t=travelH(id,node);
+  if(node.kind==="house") return (node.need?servicePay(node):0) - t*1.2;
+  return standEstimate(node) - t*1.2; }
+function bestTargetFor(id){ const S=STATE;
+  const opts=[...S.houses.filter(h=>!h.done && h.need && travelH(id,h)+CFG.jobTime<=S.daylight[id]),
+             ...S.corners.filter(c=>c.takenBy===null && travelH(id,c)+CFG.standSetup+1<=S.daylight[id])];
+  if(!opts.length)return null; return opts.slice().sort((a,b)=>targetValue(id,b)-targetValue(id,a))[0]; }
+function humanCanAct(){ const S=STATE;
+  return S.houses.some(h=>!h.done && travelH(0,h)+CFG.jobTime<=S.daylight[0]) || S.corners.some(c=>c.takenBy===null && travelH(0,c)+CFG.standSetup+1<=S.daylight[0]); }
 
-/* ---- pick a house (with the door-race) ---- */
-function goTo(hid){
-  const S=STATE, h=S.houses.find(x=>x.id===hid); if(!h||!h.job||h.job.taken)return;
-  const tHuman=travelH(0,h);
-  if(tHuman+CFG.jobTime>S.daylight[0])return;                    // not enough daylight
-  // door-race: is a closer rival also gunning for this exact house?
-  let beater=null,bt=tHuman;
-  S.players.filter(p=>!p.human).forEach(p=>{ const aij=bestJobFor(p.id);
-    if(aij && aij.id===h.id){ const t=travelH(p.id,h); if(t<bt){bt=t;beater=p;} } });
-  if(beater){
-    S.daylight[0]-=tHuman;                                        // you drove over for nothing
-    S.pos[0]={x:h.x,y:h.y};
-    aiDoJob(beater, h);                                          // they grab it
-    S.lastBeat=`${beater.name} beat you to the ${h.fam}s' — you lost ${tHuman}h on the trip!`;
-    log(`<span class="ln"><span class="r">${beater.name} beat you to the ${h.fam}s'!</span></span>`);
-    aiRound(beater.id);                                          // other rivals act
-    if(!bestJobFor(0)) endHumanDay(); else { S.phase="map"; render(); }
-    return;
-  }
-  // you get it
-  S.daylight[0]-=tHuman; S.pos[0]={x:h.x,y:h.y}; h.seen=true;
-  const base=jobPay(h), risk=0.10+QUIRK[h.quirk].flub+0.02;
-  S.work={ hid:h.id, fam:h.fam, type:h.job.type, quirk:h.quirk, base, tips:0, risk, touches:0, done:false, flubbed:false,
-    boosted:S.weather.boosts.includes(h.job.type), reveal:"", travel:tHuman };
-  h.job.taken=true; h.job.takenBy=0;
-  S.lastBeat=""; S.phase="work"; render();
+/* ---- knock on a door ---- */
+function knock(hid){
+  const S=STATE, h=S.houses.find(x=>x.id===hid); if(!h||h.done)return;
+  const tHuman=travelH(0,h); if(tHuman+CFG.jobTime>S.daylight[0])return;
+  const beater=raceFor(h,tHuman); if(beater){ loseRace(beater,h,tHuman); return; }
+  S.daylight[0]-=tHuman; S.pos[0]={x:h.x,y:h.y}; h.seen=true; h.done=true;
+  if(!h.need){ S.notice=`The ${h.fam}s aren't hiring today — that walk was a bust.`;
+    log(`<span class="ln">You knocked at the ${h.fam}s' — <span class="r">no work today</span>.</span>`);
+    afterHumanAction(); return; }
+  const base=servicePay(h);
+  S.work={ hid:h.id, fam:h.fam, svc:h.need, quirk:h.quirk, base, tips:0, risk:0.10+QUIRK[h.quirk].flub+0.02, touches:0, done:false, flubbed:false, boosted:S.weather.boosts.includes(h.need), reveal:"" };
+  S.notice=""; S.phase="work"; render();
 }
-/* ---- do the job: polish for tips, each polish costs daylight + flub risk ---- */
+/* ---- set up your own stand ---- */
+function stand(cid){
+  const S=STATE, c=S.corners.find(x=>x.id===cid); if(!c||c.takenBy!==null)return;
+  const tHuman=travelH(0,c); if(tHuman+CFG.standSetup+1>S.daylight[0])return;
+  const beater=raceFor(c,tHuman); if(beater){ loseRace(beater,c,tHuman); return; }
+  S.daylight[0]-=tHuman+CFG.standSetup; S.pos[0]={x:c.x,y:c.y}; c.takenBy=0;
+  S.standRun={ cid:c.id, spot:c.name, traffic:c.traffic, sold:0, hour:0, prod:S.weather.prod, done:false, reveal:"" };
+  S.notice=""; S.phase="standrun"; render();
+}
+function raceFor(node,tHuman){ const S=STATE; let beater=null,bt=tHuman;
+  S.players.filter(p=>!p.human).forEach(p=>{ const tgt=bestTargetFor(p.id);
+    if(tgt && tgt.id===node.id){ const t=travelH(p.id,node); if(t<bt){bt=t;beater=p;} } });
+  return beater; }
+function loseRace(p,node,tHuman){ const S=STATE; S.daylight[0]-=tHuman; S.pos[0]={x:node.x,y:node.y};
+  const where=node.kind==="house"?`the ${node.fam}s'`:node.name;
+  if(node.kind==="house") aiDoJob(p,node); else aiRunStand(p,node);
+  S.notice=`${p.name} beat you to ${where} — you lost ${tHuman}h on the trip!`;
+  log(`<span class="ln"><span class="r">${p.name} beat you to ${where}!</span></span>`);
+  aiRound(p.id); afterHumanAction(); }
+function afterHumanAction(){ const S=STATE; if(humanCanAct()){ S.phase="map"; render(); } else endHumanDay(); }
+
+/* ---- do the service (tips press-your-luck) ---- */
 function work(action){
   const S=STATE, W=S.work; if(!W||W.done)return;
   if(action==="done"){ W.done=true; finishJob(); return; }
   if(S.daylight[0]<CFG.touchTime)return;
   S.daylight[0]-=CFG.touchTime; W.touches++;
-  if(Math.random()<W.risk){
-    const m={ mow:"You clipped the flowerbed! 🌷", rake:"The bag split everywhere! 💨", lemon:"You knocked the pitcher over! 💦", sit:"The toddler melted down! 😭", wash:"You left streaks! 😬", dog:"A dog slipped the leash! 🐕💨" };
-    W.reveal=(m[W.type]||"Whoops!")+" No tip this time."; W.tips=0; W.flubbed=true; W.done=true; finishJob(); return;
-  }
-  const t=JOB[W.type].touches; const tip=Math.round(CFG.tip*QUIRK[W.quirk].tipMul);
+  if(Math.random()<W.risk){ const m={ mow:"You clipped the flowerbed! 🌷", rake:"The bag split! 💨", sit:"The toddler melted down! 😭", wash:"You left streaks! 😬", dog:"The dog slipped the leash! 🐕💨" };
+    W.reveal=(m[W.svc]||"Whoops!")+" No tip this time."; W.tips=0; W.flubbed=true; W.done=true; finishJob(); return; }
+  const t=SVC[W.svc].touches, tip=Math.round(CFG.tip*QUIRK[W.quirk].tipMul);
   W.tips+=tip; W.reveal=`You ${t[(W.touches-1)%t.length]} — +${cash(tip)} tip${QUIRK[W.quirk].tipMul<1?" (tight tippers)":""}`;
-  W.risk += (S.gear[0].careful?0.10:0.18); render();
+  W.risk+=(S.gear[0].careful?0.10:0.18); render();
 }
-function finishJob(){
-  const S=STATE, W=S.work;
+function finishJob(){ const S=STATE, W=S.work;
   S.daylight[0]=Math.max(0,S.daylight[0]-CFG.jobTime);
   const earned=W.flubbed?W.base:W.base+W.tips; S.money[0]+=earned;
   S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(W.flubbed?-1:1)));
-  S.pay={ earned, base:W.base, tips:W.flubbed?0:W.tips, flubbed:W.flubbed, boosted:W.boosted, type:W.type, fam:W.fam };
-  log(`<span class="ln"><b style="color:#2f9e5c">You</b> ${JOB[W.type].name.toLowerCase()} at the ${W.fam}s' — <span class="${W.flubbed?'r':'g'}">${cash(earned)}</span>${W.flubbed?" (flubbed the tip)":W.tips?` <span class="gold">(+${cash(W.tips)} tips)</span>`:""}.</span>`);
+  S.pay={ kind:"job", earned, base:W.base, tips:W.flubbed?0:W.tips, flubbed:W.flubbed, boosted:W.boosted, label:`${SVC[W.svc].name} · the ${W.fam}s'` };
+  log(`<span class="ln"><b style="color:#2f9e5c">You</b> ${SVC[W.svc].name.toLowerCase()} at the ${W.fam}s' — <span class="${W.flubbed?'r':'g'}">${cash(earned)}</span>${W.flubbed?" (flubbed the tip)":W.tips?` <span class="gold">(+${cash(W.tips)} tips)</span>`:""}.</span>`);
   S.work=null; aiRound(null); S.phase="payday"; render();
 }
-function paydayNext(){ const S=STATE; if(bestJobFor(0)) { S.phase="map"; render(); } else endHumanDay(); }
+/* ---- run the stand (sell hour by hour, weather-driven) ---- */
+function standSell(action){
+  const S=STATE, R=S.standRun; if(!R||R.done)return;
+  if(action==="packup"){ R.done=true; finishStand(); return; }
+  if(S.daylight[0]<1){ R.done=true; finishStand(); return; }
+  S.daylight[0]-=1; R.hour++;
+  const batch=Math.max(1, Math.round(R.traffic*S.weather.stand*(1-0.16*(R.hour-1))));
+  R.sold+=batch; R.reveal=`Sold a batch of ${R.prod} — +${cash(batch)}!`;
+  if(S.daylight[0]<1){ R.done=true; }
+  if(R.done) finishStand(); else render();
+}
+function finishStand(){ const S=STATE, R=S.standRun; const c=S.corners.find(x=>x.id===R.cid); if(c)c.takenBy=0;
+  S.money[0]+=R.sold;
+  S.pay={ kind:"stand", earned:R.sold, base:0, tips:0, flubbed:false, boosted:S.weather.stand>=3, label:`${R.prod} stand · ${R.spot}` };
+  log(`<span class="ln"><b style="color:#2f9e5c">You</b> ran a ${R.prod} stand at ${R.spot} — <span class="g">${cash(R.sold)}</span>.</span>`);
+  S.standRun=null; aiRound(null); S.phase="payday"; render();
+}
+function paydayNext(){ afterHumanAction(); }
 
 /* ---- rivals ---- */
-function aiDoJob(p, h){
-  const S=STATE; S.daylight[p.id]-=travelH(p.id,h); S.pos[p.id]={x:h.x,y:h.y}; h.job.taken=true; h.job.takenBy=p.id; h.seen=true;
-  let base=jobPay(h), tips=0, risk=0.10+QUIRK[h.quirk].flub, flub=false;
+function aiDoJob(p,h){ const S=STATE; S.daylight[p.id]-=travelH(p.id,h); S.pos[p.id]={x:h.x,y:h.y}; h.done=true; h.seen=true;
+  let base=servicePay(h), tips=0, risk=0.10+QUIRK[h.quirk].flub, flub=false;
   const pushes=p.pers==="greedy"?3:p.pers==="cautious"?1:1+rnd(3);
   for(let k=0;k<pushes;k++){ if(S.daylight[p.id]<CFG.touchTime)break; S.daylight[p.id]-=CFG.touchTime; if(Math.random()<risk){flub=true;break;} tips+=Math.round(CFG.tip*QUIRK[h.quirk].tipMul); risk+=0.18; }
   S.daylight[p.id]=Math.max(0,S.daylight[p.id]-CFG.jobTime);
   const earned=flub?base:base+tips; S.money[p.id]+=earned;
   S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(flub?-1:1)));
-  log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> did ${JOB[h.job.type].name.toLowerCase()} at the ${h.fam}s' — <span class="${flub?'r':'g'}">${cash(earned)}</span>${flub?" (flub)":""}.</span>`);
-}
-function aiRound(exclude){ STATE.players.filter(p=>!p.human && p.id!==exclude).forEach(p=>{ const h=bestJobFor(p.id); if(h) aiDoJob(p,h); }); }
-function endHumanDay(){
-  const S=STATE; let guard=0;
-  while(guard++<40){ let acted=false; S.players.filter(p=>!p.human).forEach(p=>{ const h=bestJobFor(p.id); if(h){ aiDoJob(p,h); acted=true; } }); if(!acted)break; }
-  startStore();
-}
-function startStore(){ const S=STATE; const cheap=Math.min.apply(null,GEAR.filter(g=>!S.gear[0][g.key]).map(g=>g.cost).concat([999]));
-  if(S.money[0]<cheap){ startEvening(); return; } S.phase="store"; render(); }
-function buyGear(key){ const S=STATE, g=GEAR.find(x=>x.key===key); if(!g||S.gear[0][key]||S.money[0]<g.cost)return;
-  S.money[0]-=g.cost; S.gear[0][key]=true; log(`<span class="ln"><b style="color:#2f9e5c">You</b> got <span class="gold">${g.name}</span> ${g.em}.</span>`); render(); }
+  log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> did ${SVC[h.need].name.toLowerCase()} at the ${h.fam}s' — <span class="${flub?'r':'g'}">${cash(earned)}</span>${flub?" (flub)":""}.</span>`); }
+function aiRunStand(p,c){ const S=STATE; S.daylight[p.id]-=travelH(p.id,c)+CFG.standSetup; S.pos[p.id]={x:c.x,y:c.y}; c.takenBy=p.id;
+  const hours=p.pers==="greedy"?4:p.pers==="cautious"?2:1+rnd(3); let sold=0;
+  for(let hr=1;hr<=hours;hr++){ if(S.daylight[p.id]<1)break; S.daylight[p.id]-=1; sold+=Math.max(1,Math.round(c.traffic*S.weather.stand*(1-0.16*(hr-1)))); }
+  S.money[p.id]+=sold;
+  log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> ran a ${S.weather.prod} stand at ${c.name} — <span class="g">${cash(sold)}</span>.</span>`); }
+function aiTurn(p){ const t=bestTargetFor(p.id); if(!t)return false; if(t.kind==="house")aiDoJob(p,t); else aiRunStand(p,t); return true; }
+function aiRound(exclude){ STATE.players.filter(p=>!p.human && p.id!==exclude).forEach(p=>aiTurn(p)); }
+function endHumanDay(){ const S=STATE; let guard=0; while(guard++<40){ let acted=false; S.players.filter(p=>!p.human).forEach(p=>{ if(aiTurn(p))acted=true; }); if(!acted)break; } startStore(); }
+function startStore(){ const S=STATE; const cheap=Math.min.apply(null,GEAR.filter(g=>!S.gear[0][g.key]).map(g=>g.cost).concat([999])); if(S.money[0]<cheap){ startEvening(); return; } S.phase="store"; render(); }
+function buyGear(key){ const S=STATE, g=GEAR.find(x=>x.key===key); if(!g||S.gear[0][key]||S.money[0]<g.cost)return; S.money[0]-=g.cost; S.gear[0][key]=true; log(`<span class="ln"><b style="color:#2f9e5c">You</b> got <span class="gold">${g.name}</span> ${g.em}.</span>`); render(); }
 function storeDone(){ startEvening(); }
-function startEvening(){ const S=STATE, gw=S.goodwill; S.night={gw,soured:gw<=CFG.soured};
-  if(gw<=CFG.soured) log(`<span class="ln"><span class="r">⚠ The block's getting grumpy.</span></span>`); S.phase="evening"; render(); }
+function startEvening(){ const S=STATE, gw=S.goodwill; S.night={gw,soured:gw<=CFG.soured}; if(gw<=CFG.soured) log(`<span class="ln"><span class="r">⚠ The block's getting grumpy.</span></span>`); S.phase="evening"; render(); }
 function nextDay(){ const S=STATE; if(S.day>=S.maxDays){ endGame(); return; } S.day++; startDay(); }
 function endGame(){ const S=STATE; S.soured=S.goodwill<=CFG.soured; S.phase="over"; render(); }
 
 /* ---------- render ---------- */
 function moodOf(gw){ if(gw<=CFG.soured)return{t:"Grumbling",c:"var(--bad)",f:"bad"}; if(gw>=8)return{t:"Loves you kids!",c:"var(--good)",f:""}; return{t:"Friendly",c:"var(--warn)",f:"warn"}; }
-function boostList(){ return STATE.weather.boosts.map(k=>JOB[k].em).join(" "); }
-function px(v,max){ return v/(max-1)*88+6; }   // grid coord -> % (with padding)
+function boostList(){ return STATE.weather.boosts.map(k=>SVC[k].em).join(" "); }
+function px(v,max){ return v/(max-1)*88+6; }
 
 function hud(){
   const S=STATE, gw=S.goodwill, m=moodOf(gw), dl=S.daylight[0];
-  const stand=S.players.slice().sort((a,b)=>S.money[b.id]-S.money[a.id]).map(p=>{
-    const g=["flyers","careful","bike"].filter(k=>S.gear[p.id][k]).length;
-    return `<div class="p"><span><span class="chip" style="background:${p.color}"></span>${p.name}${g?` <span style="color:var(--faint)">·${g}⚙</span>`:""}</span><span class="cash">${cash(S.money[p.id])}</span></div>`;
-  }).join("");
+  const stand=S.players.slice().sort((a,b)=>S.money[b.id]-S.money[a.id]).map(p=>{ const g=["flyers","careful","bike"].filter(k=>S.gear[p.id][k]).length;
+    return `<div class="p"><span><span class="chip" style="background:${p.color}"></span>${p.name}${g?` <span style="color:var(--faint)">·${g}⚙</span>`:""}</span><span class="cash">${cash(S.money[p.id])}</span></div>`; }).join("");
   return `<div class="hud">
     <div class="card stat"><div class="label">Day</div><div class="big">${S.day}<span style="color:var(--faint);font-size:15px"> / ${S.maxDays}</span></div>
       <div class="label" style="margin-top:8px">Daylight ☀️→🌙</div><div class="dlbar"><div class="dlfill" style="width:${dl/CFG.daylight*100}%"></div></div>
       <div style="font-size:11px;color:var(--faint);margin-top:3px">${dl}h left today</div></div>
-    <div class="card"><div class="label">Today</div><div class="wx"><span class="em">${S.weather.em}</span><span class="nm">${S.weather.key[0].toUpperCase()+S.weather.key.slice(1)}</span></div><div class="boosts">${boostList()} pay double</div></div>
+    <div class="card"><div class="label">Today</div><div class="wx"><span class="em">${S.weather.em}</span><span class="nm">${S.weather.key[0].toUpperCase()+S.weather.key.slice(1)}</span></div>
+      <div class="boosts">${boostList()} pay double · stands ${["","meh","good","booming!"][S.weather.stand]||""}</div></div>
     <div class="card"><div class="label">The Block</div><div class="mood" style="color:${m.c}">${m.t}</div><div class="gwbar"><div class="gwfill ${m.f}" style="width:${gw/CFG.gwMax*100}%"></div></div></div>
     <div class="card"><div class="label">Savings</div><div class="stand">${stand}</div></div></div>`;
 }
-function mapView(clickable){
+function mapView(){
   const S=STATE, flyers=S.gear[0].flyers;
-  const houses=S.houses.map(h=>{
-    const hasJob=h.job && !h.job.taken, hot=hasJob&&S.weather.boosts.includes(h.job.type);
-    const afford=hasJob && travelH(0,h)+CFG.jobTime<=S.daylight[0];
-    let cap="", cls="house";
-    if(h.job && h.job.taken){ cls+=" taken"; const w=S.players.find(p=>p.id===h.job.takenBy); cap=`<span class="cap">${w?(w.human?"you":w.name):"done"}</span>`; }
-    else if(hasJob){ if(hot)cls+=" hot"; const t=travelH(0,h);
-      cap = flyers ? `<span class="cap ${hot?'gold':''}">${cash(jobPay(h))} · ${t}h${QUIRK[h.quirk].tag?" · "+QUIRK[h.quirk].tag:""}</span>`
-                   : `<span class="cap ${hot?'gold':''}">${t}h away${h.seen&&QUIRK[h.quirk].tag?" · "+QUIRK[h.quirk].tag:""}</span>`; }
-    else { cls+=" nojob"; }
-    const em = hasJob||(h.job&&h.job.taken) ? JOB[h.job.type].em : "🏠";
-    const tag = clickable && afford ? "button":"div";
-    const attr = clickable&&afford ? `data-act="go" data-id="${h.id}"`:"";
-    return `<${tag} class="${cls}" style="left:${px(h.x,CFG.gridW)}%;top:${px(h.y,CFG.gridH)}%" ${attr}>
-      <span class="pin">${em}</span>${cap}</${tag}>`;
+  const nodes=S.houses.map(h=>{
+    const afford=!h.done && travelH(0,h)+CFG.jobTime<=S.daylight[0];
+    let cls="node", cap="", cues="";
+    if(h.done){ cls+=" done"; cap=`<span class="cap">done</span>`; }
+    else { cues=`<span class="cues">${h.traits.map(t=>TRAIT[t].em).join("")}</span>`;
+      if(flyers){ if(h.need){ cls+=" need"; const hot=S.weather.boosts.includes(h.need); cap=`<span class="cap ${hot?'gold':''}">${SVC[h.need].em} needs ${SVC[h.need].name.split(" ")[0].toLowerCase()} · ${cash(servicePay(h))}</span>`; }
+        else cap=`<span class="cap">not hiring</span>`; }
+      else { cap=`<span class="cap">${travelH(0,h)}h${h.seen&&QUIRK[h.quirk].tag?" · "+QUIRK[h.quirk].tag:""}</span>`; if(h.need&&S.weather.boosts.some(b=>h.traits.map(t=>TRAIT[t].svc).includes(b))) cls+=""; }
+    }
+    const tag=afford?"button":"div", attr=afford?`data-act="knock" data-id="${h.id}"`:"";
+    return `<${tag} class="${cls}" style="left:${px(h.x,CFG.gridW)}%;top:${px(h.y,CFG.gridH)}%" ${attr}><span class="pin">🏠</span>${cues}${cap}</${tag}>`;
+  }).join("");
+  const corners=S.corners.map(c=>{
+    const taken=c.takenBy!==null, afford=!taken && travelH(0,c)+CFG.standSetup+1<=S.daylight[0];
+    const cap = taken ? `<span class="cap">taken</span>` : `<span class="cap ${S.weather.stand>=3?'gold':''}">stand · ${travelH(0,c)}h · traffic ${"▮".repeat(c.traffic)}</span>`;
+    const tag=afford?"button":"div", attr=afford?`data-act="stand" data-id="${c.id}"`:"";
+    return `<${tag} class="node corner ${taken?'done':''}" style="left:${px(c.x,CFG.gridW)}%;top:${px(c.y,CFG.gridH)}%" ${attr}><span class="pin">🥤</span>${cap}</${tag}>`;
   }).join("");
   const kids=S.players.map(p=>`<div class="kid" title="${p.name}" style="left:${px(S.pos[p.id].x,CFG.gridW)}%;top:${px(S.pos[p.id].y,CFG.gridH)}%;background:${p.color}">${p.human?"🧒":""}</div>`).join("");
-  return `<div class="map"><div class="grid"></div>${houses}${kids}</div>`;
+  return `<div class="map"><div class="grid"></div>${nodes}${corners}${kids}</div>`;
 }
 function stageMap(){
   const S=STATE, dl=S.daylight[0];
-  const beat = S.lastBeat?`<div class="banner bad">${S.lastBeat}</div>`:"";
-  return `<div class="stage"><h2>Where to next?</h2>
-    <div class="hint">${S.weather.em} <b>${boostList()} pay double today.</b> Tap a house with a job. Farther houses cost more daylight — and if a rival's closer to the same door, they'll beat you to it.</div>
-    ${beat}
-    ${mapView(true)}
-    <div class="maplegend"><span>☀️ ${dl}h daylight left</span><span>🟡 HOT = double pay</span><span>🏠 no job today</span>${S.gear[0].flyers?"<span>📋 pay & quirks shown</span>":"<span>take a job to learn a house</span>"}</div>
-    <div class="btnrow"><button class="btn" data-act="go-home">Call it a day (head home) →</button></div>
+  const notice=S.notice?`<div class="banner bad">${S.notice}</div>`:"";
+  return `<div class="stage"><h2>Drum up some work</h2>
+    <div class="hint">${S.weather.em} <b>${boostList()} pay double today; stands are ${["","slow","good","booming!"][S.weather.stand]}.</b><br>
+      <b>Knock on a 🏠</b> — read the cues (top-right) + the weather to guess who needs a hand. <b>Set up a 🥤 stand</b> at a corner for your own venture. Farther = more daylight; a closer rival can beat you to it.</div>
+    ${notice}
+    ${mapView()}
+    <div class="maplegend"><span>☀️ ${dl}h left</span><span>cues: 🌿lawn 🧸kids 🐕dog 🍂leaves 🚗car</span>${S.gear[0].flyers?"<span>📋 needs shown</span>":"<span>knock to find out who's hiring</span>"}</div>
+    <div class="btnrow"><button class="btn" data-act="go-home">Call it a day →</button></div>
   </div>`;
 }
 function stageWork(){
-  const S=STATE, W=S.work, j=JOB[W.type], dl=S.daylight[0];
-  const riskPct=Math.min(100,Math.round(W.risk*100)), hi=W.risk>=0.5;
-  const canTouch = dl>=CFG.touchTime;
-  return `<div class="stage"><h2>${j.name} · the ${W.fam}s'${QUIRK[W.quirk].tag?` <span style="color:var(--faint);font-size:12px">(${QUIRK[W.quirk].tag})</span>`:""}</h2>
-    <div class="hint">Base pay <b>${cash(W.base)}</b>${W.boosted?' <span style="color:var(--gold)">(double — hot today!)</span>':""}. Each nice touch adds a tip but costs <b>${CFG.touchTime}h of daylight</b> and raises the flub chance. Spend the hour here, or save it for another house?</div>
+  const S=STATE, W=S.work, sv=SVC[W.svc], dl=S.daylight[0];
+  const riskPct=Math.min(100,Math.round(W.risk*100)), hi=W.risk>=0.5, canTouch=dl>=CFG.touchTime;
+  return `<div class="stage"><h2>${sv.name} · the ${W.fam}s'${QUIRK[W.quirk].tag?` <span style="color:var(--faint);font-size:12px">(${QUIRK[W.quirk].tag})</span>`:""}</h2>
+    <div class="hint">They hired you! Base pay <b>${cash(W.base)}</b>${W.boosted?' <span style="color:var(--gold)">(double — in demand today!)</span>':""}. Each nice touch adds a tip but costs <b>${CFG.touchTime}h</b> and raises the flub chance.</div>
     <div class="reveal ${W.flubbed?'bad':W.tips>0?'big':''}">${W.reveal||"&nbsp;"}</div>
     <div class="pay"><span class="big">${cash(W.base+W.tips)}</span><span class="brk">${cash(W.base)} job${W.tips?` + ${cash(W.tips)} tips`:""}</span></div>
-    <div class="clock">☀️ ${dl}h daylight left · flub chance <span style="color:${hi?'var(--bad)':'var(--warn)'}">${riskPct}%</span></div>
-    <div class="btnrow">
-      <button class="btn primary" data-act="touch" ${canTouch?"":"disabled"}>✨ Add a touch (−${CFG.touchTime}h, +tip)</button>
-      <button class="btn" data-act="wrapup">Wrap up — take ${cash(W.base+W.tips)}</button>
-    </div>${canTouch?"":'<div class="legend">Not enough daylight to keep polishing — wrap it up.</div>'}</div>`;
+    <div class="clock">☀️ ${dl}h left · flub chance <span style="color:${hi?'var(--bad)':'var(--warn)'}">${riskPct}%</span></div>
+    <div class="btnrow"><button class="btn primary" data-act="touch" ${canTouch?"":"disabled"}>✨ Add a touch (−${CFG.touchTime}h, +tip)</button>
+      <button class="btn" data-act="wrapup">Wrap up — take ${cash(W.base+W.tips)}</button></div></div>`;
+}
+function stageStand(){
+  const S=STATE, R=S.standRun, dl=S.daylight[0], canSell=dl>=1;
+  const next=Math.max(1,Math.round(R.traffic*S.weather.stand*(1-0.16*R.hour)));
+  return `<div class="stage"><h2>Your ${R.prod} stand · ${R.spot}</h2>
+    <div class="hint">Your own little business! Sell another hour for more, or pack up. The crowd thins as the day goes — and ${S.weather.em} weather makes ${R.prod} ${["","slow","sell okay","fly off the table!"][S.weather.stand]}.</div>
+    <div class="reveal big">${R.reveal||"&nbsp;"}</div>
+    <div class="pay"><span class="big">${cash(R.sold)}</span><span class="brk">sold so far · next hour ≈ ${cash(next)}</span></div>
+    <div class="clock">☀️ ${dl}h left</div>
+    <div class="btnrow"><button class="btn primary" data-act="sell" ${canSell?"":"disabled"}>🥤 Sell another hour (−1h, ≈${cash(next)})</button>
+      <button class="btn" data-act="packup">Pack up — keep ${cash(R.sold)}</button></div></div>`;
 }
 function stagePayday(){
-  const S=STATE, P=S.pay, more=!!bestJobFor(0);
-  return `<div class="stage"><h2>${P.flubbed?"Ah well…":"Nice work! 🎉"}</h2>
-    ${P.flubbed?`<div class="banner bad">Flubbed the tip, but you still got paid for the job.</div>`:`<div class="banner good">Neighbor's thrilled — the block likes you a little more.</div>`}
-    <div class="pay"><span class="big">${cash(P.earned)}</span><span class="brk">${cash(P.base)} job${P.tips?` + ${cash(P.tips)} tips`:""}${P.boosted?" · double!":""}</span></div>
+  const S=STATE, P=S.pay, more=humanCanAct();
+  return `<div class="stage"><h2>${P.flubbed?"Ah well…":P.kind==="stand"?"Good day at the stand! 🥤":"Nice work! 🎉"}</h2>
+    ${P.flubbed?`<div class="banner bad">Flubbed the tip, but you still got paid for the job.</div>`:`<div class="banner good">${P.kind==="stand"?"Nice little haul from your own business.":"Neighbor's thrilled — the block likes you a little more."}</div>`}
+    <div class="pay"><span class="big">${cash(P.earned)}</span><span class="brk">${P.label}${P.tips?` · +${cash(P.tips)} tips`:""}${P.boosted?" · great day for it!":""}</span></div>
     <div class="hint">☀️ ${S.daylight[0]}h daylight left.</div>
-    <div class="btnrow"><button class="btn primary" data-act="payday-next">${more?"Back to the map →":"Head home — out of daylight →"}</button></div>
-  </div>`;
+    <div class="btnrow"><button class="btn primary" data-act="payday-next">${more?"Back to the block →":"Head home — out of daylight →"}</button></div></div>`;
 }
 function stageStore(){
   const S=STATE, c=S.money[0];
   const cards=GEAR.map(g=>{ const owned=S.gear[0][g.key], afford=c>=g.cost;
-    return `<div class="mrow"><button class="btn wide" data-act="buy" data-key="${g.key}" ${(owned||!afford)?"disabled":""}>
-      <span>${g.em} <b>${g.name}</b> ${owned?'<span class="sub" style="color:var(--good)">· got it</span>':`<span class="sub">· ${cash(g.cost)}</span>`}</span><span class="sub">${g.desc}</span></button>${owned?'<span class="mtip up">✓</span>':(afford?'':'<span class="mtip">save up</span>')}</div>`;
-  }).join("");
-  return `<div class="stage"><h2>Corner store 🏪</h2><div class="hint">You've got ${cash(c)}. Gear pays for itself over the summer — or keep saving.</div>
-    <div class="mtable">${cards}</div><div class="btnrow"><button class="btn primary" data-act="store-done">Home for the night →</button></div></div>`;
+    return `<div class="mrow"><button class="btn wide" data-act="buy" data-key="${g.key}" ${(owned||!afford)?"disabled":""}><span>${g.em} <b>${g.name}</b> ${owned?'<span class="sub" style="color:var(--good)">· got it</span>':`<span class="sub">· ${cash(g.cost)}</span>`}</span><span class="sub">${g.desc}</span></button>${owned?'<span class="mtip up">✓</span>':(afford?'':'<span class="mtip">save up</span>')}</div>`; }).join("");
+  return `<div class="stage"><h2>Corner store 🏪</h2><div class="hint">You've got ${cash(c)}. Gear pays for itself over the summer — or keep saving.</div><div class="mtable">${cards}</div><div class="btnrow"><button class="btn primary" data-act="store-done">Home for the night →</button></div></div>`;
 }
-function stageEvening(){
-  const S=STATE, N=S.night, last=S.day>=S.maxDays, m=moodOf(N.gw);
+function stageEvening(){ const S=STATE, N=S.night, last=S.day>=S.maxDays, m=moodOf(N.gw);
   return `<div class="stage"><h2>Evening on the block</h2>
     ${N.soured?`<div class="banner bad">The neighbors are getting grumpy. If the block's still sour at summer's end, everyone's savings take a hit — do clean jobs, don't overdo it.</div>`:`<div class="banner good">The block is <b>${m.t.toLowerCase()}</b> tonight.</div>`}
     <div class="hint">Tomorrow: ${S.nextWeather.em} looks like ${S.nextWeather.key}.</div>
     <div class="btnrow"><button class="btn primary" data-act="next-day">${last?"See how the summer went":"Next morning →"}</button></div></div>`;
 }
-function stageOver(){
-  const S=STATE, mult=S.soured?0.5:1, score={}; S.players.forEach(p=>score[p.id]=Math.floor(S.money[p.id]*mult));
+function stageOver(){ const S=STATE, mult=S.soured?0.5:1, score={}; S.players.forEach(p=>score[p.id]=Math.floor(S.money[p.id]*mult));
   const ranked=S.players.slice().sort((a,b)=>score[b.id]-score[a.id]), win=ranked[0];
   const rows=ranked.map((p,i)=>`<div class="row ${i===0?'win':''}"><span><span class="chip" style="background:${p.color}"></span>${p.name}${i===0?" 🏆":""}</span><span class="cash">${cash(score[p.id])}</span></div>`).join("");
   return `<div class="stage results"><h2>End of summer</h2>
     ${S.soured?`<div class="banner bad">The block soured on all the hustle — everyone's savings were halved. Next summer, be a better neighbor. 🏘️</div>`:`<div class="banner good">A great summer on the block! 🌞</div>`}
-    <div style="margin:10px 0">${rows}</div>
-    <div class="hint">${win.human?"You're the top kid on the block! 🏆":win.name+" out-hustled you — get 'em next year."}</div>
+    <div style="margin:10px 0">${rows}</div><div class="hint">${win.human?"You're the top kid on the block! 🏆":win.name+" out-hustled you — get 'em next year."}</div>
     <div class="btnrow"><button class="btn primary" data-act="restart">Another summer</button></div>
-    <div class="legend">The Block v0.2 — a procedural map, a daylight budget, and door-races with rivals. Learn the block's quirks; spend your daylight well. Fun for a few rounds? Then art + the TV/iPad build.</div></div>`;
+    <div class="legend">The Block v0.3 — knock on doors to drum up work, or run your own stand. Read the block, spend your daylight well, beat the others to the good gigs.</div></div>`;
 }
-function setup(){
-  return `<div class="setup"><div class="stage"><h2>The Block 🏘️</h2>
-    <p>A summer on the block. Roam a neighborhood that's different every game, take odd jobs — mow, rake, babysit, lemonade — and out-earn the other kids. You've only got so much daylight, so pick your route well… and beat the others to the good doors.</p>
-    <div class="field"><span class="label">Kids (you + rivals)</span><select id="np"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
-    <div class="field"><span class="label">Days of summer</span><select id="nd"><option>4</option><option selected>5</option><option>6</option></select></div>
-    <div class="btnrow" style="margin-top:16px"><button class="btn primary" data-act="start">☀️ Start the summer</button></div>
-    <div class="legend">The other kids: Chip (greedy hustler), Dot (steady), Bax (chaotic).</div></div></div>`;
+function setup(){ return `<div class="setup"><div class="stage"><h2>The Block 🏘️</h2>
+  <p>A summer on the block. Knock on doors to drum up odd jobs — mowing, raking, babysitting, car washes — or set up your own lemonade stand on a good corner. Read the neighborhood, spend your daylight wisely, and out-earn the other kids.</p>
+  <div class="field"><span class="label">Kids (you + rivals)</span><select id="np"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
+  <div class="field"><span class="label">Days of summer</span><select id="nd"><option>4</option><option selected>5</option><option>6</option></select></div>
+  <div class="btnrow" style="margin-top:16px"><button class="btn primary" data-act="start">☀️ Start the summer</button></div>
+  <div class="legend">The other kids: Chip (greedy hustler), Dot (steady), Bax (chaotic).</div></div></div>`;
 }
 function render(){
   const S=STATE, app=document.getElementById("app"), tag=document.getElementById("phaseTag");
@@ -387,21 +400,24 @@ function render(){
   const P=S.phase; let stage="";
   if(P==="map") stage=stageMap();
   else if(P==="work") stage=stageWork();
+  else if(P==="standrun") stage=stageStand();
   else if(P==="payday") stage=stagePayday();
   else if(P==="store") stage=stageStore();
   else if(P==="evening") stage=stageEvening();
   else if(P==="over"){ app.innerHTML=stageOver(); if(tag)tag.textContent="summer's over"; return; }
   const feed=`<div class="log"><h3>Around the block</h3><div class="feed">${S.log.join("")||'<span class="ln">…</span>'}</div></div>`;
-  app.innerHTML = hud() + stage + feed;
-  if(tag) tag.textContent=({map:"on the block",work:"on the job",payday:"payday",store:"corner store",evening:"evening"})[P]||"the block";
+  app.innerHTML=hud()+stage+feed;
+  if(tag) tag.textContent=({map:"on the block",work:"on the job",standrun:"running the stand",payday:"payday",store:"corner store",evening:"evening"})[P]||"the block";
 }
-document.addEventListener("click", e=>{
-  const b=e.target.closest("[data-act]"); if(!b)return; const a=b.dataset.act;
+document.addEventListener("click", e=>{ const b=e.target.closest("[data-act]"); if(!b)return; const a=b.dataset.act;
   if(a==="start") newGame(parseInt(document.getElementById("np").value), parseInt(document.getElementById("nd").value));
-  else if(a==="go") goTo(parseInt(b.dataset.id));
+  else if(a==="knock") knock(parseInt(b.dataset.id));
+  else if(a==="stand") stand(parseInt(b.dataset.id));
   else if(a==="go-home") endHumanDay();
   else if(a==="touch") work("touch");
   else if(a==="wrapup") work("done");
+  else if(a==="sell") standSell("sell");
+  else if(a==="packup") standSell("packup");
   else if(a==="payday-next") paydayNext();
   else if(a==="buy") buyGear(b.dataset.key);
   else if(a==="store-done") storeDone();
