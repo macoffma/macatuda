@@ -3,18 +3,23 @@
 Two self-contained, single-file prototypes of the same tuned engine, different
 skins. Open either in any browser (phone, iPad, laptop) — no build, no install.
 
-- **`the-block-greybox.html` — The Block (current direction, v0.3).** A
+- **`the-block-greybox.html` — The Block (current direction, v0.4).** A
   neighborhood summer hustle on a **procedural map** — you *drum up* work, you
   don't pick it off a board. Key systems: **knock on doors** to prospect (read a
   house's cues — 🌿 lawn, 🧸 kids, 🐕 dog, 🍂 leaves, 🚗 car — plus the weather to
   guess who's hiring; a bad read gets "not today" and a wasted walk); **set up
   your own stand** (lemonade/cider) at a corner as your weather-driven venture;
   base pay is a safe floor with **tips as the press-your-luck**; a **Daylight
-  budget** is the master scarcity (travel + jobs + each polish all spend it, so
-  milking a neighbor trades against reaching another); the map's **distances and
-  house quirks** are learned each game; heading for the **same door/corner as a
-  rival is a race** (closest wins — the M.U.L.E. plot-grab); and the commons is
-  **Neighborhood Goodwill** (a happy block pays everyone more).
+  budget** is the master scarcity (travel + jobs + each polish all spend it);
+  the map's **distances and house quirks** are learned each game; **door/corner
+  races** (closest rival wins — the M.U.L.E. plot-grab); and **Neighborhood
+  Goodwill** as the commons. New in v0.4: **skill tracks** per work type that
+  level up as you *do* the work (more pay, fewer flubs — getting good is earned,
+  not bought); a **store that sells tools** mapped to each track (mower, lemonade
+  cart, wagon), so purchases follow what you're becoming good at; and a
+  **M.U.L.E.-style end-of-day reveal** — everyone's earnings broken down by work
+  type as stacked bars, what you left on the table (flubbed tips, wasted walks,
+  jobs undone), and your skills leveling up.
 - **`overboard-greybox.html` — Overboard (earlier fishing version).** Kept for
   reference; same core loop with a fishing skin. The notes below describe it.
 
