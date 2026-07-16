@@ -3,12 +3,16 @@
 Two self-contained, single-file prototypes of the same tuned engine, different
 skins. Open either in any browser (phone, iPad, laptop) — no build, no install.
 
-- **`the-block-greybox.html` — The Block (current direction).** A neighborhood
-  summer hustle: take odd jobs (mow, rake, babysit, lemonade), do them well for
-  tips, chase what the weather makes pay double, and keep the block happy. This is
-  a *reinvention*, not a reskin — base pay is a safe floor and tips are the
-  press-your-luck, there's no market/inventory phase (you're paid on the spot),
-  and the commons is "Neighborhood Goodwill" (a happy block pays everyone more).
+- **`the-block-greybox.html` — The Block (current direction, v0.2).** A
+  neighborhood summer hustle on a **procedural map**. Roam a block that's
+  different every game, take odd jobs (mow, rake, babysit, lemonade), do them well
+  for tips, chase what the weather makes pay double, and keep the block happy.
+  Key systems: base pay is a safe floor and **tips are the press-your-luck**;
+  a **Daylight budget** is the master scarcity (travel + doing a job + each polish
+  all spend it, so "why not max out?" is answered by time); the map's **distances
+  and house quirks** are learned each game; heading for the **same door as a rival
+  is a race** (closest wins, the other wastes the trip — the M.U.L.E. plot-grab);
+  and the commons is **Neighborhood Goodwill** (a happy block pays everyone more).
 - **`overboard-greybox.html` — Overboard (earlier fishing version).** Kept for
   reference; same core loop with a fishing skin. The notes below describe it.
 
