@@ -1,4 +1,20 @@
-# Overboard — Greybox v0.1
+# Playable greyboxes
+
+Two self-contained, single-file prototypes of the same tuned engine, different
+skins. Open either in any browser (phone, iPad, laptop) — no build, no install.
+
+- **`the-block-greybox.html` — The Block (current direction).** A neighborhood
+  summer hustle: take odd jobs (mow, rake, babysit, lemonade), do them well for
+  tips, chase what the weather makes pay double, and keep the block happy. This is
+  a *reinvention*, not a reskin — base pay is a safe floor and tips are the
+  press-your-luck, there's no market/inventory phase (you're paid on the spot),
+  and the commons is "Neighborhood Goodwill" (a happy block pays everyone more).
+- **`overboard-greybox.html` — Overboard (earlier fishing version).** Kept for
+  reference; same core loop with a fishing skin. The notes below describe it.
+
+---
+
+# Overboard — Greybox v0.4
 
 `overboard-greybox.html` is a **self-contained, playable slice** of the Overboard
 core loop. One HTML file, no build step, no dependencies — open it in any browser
