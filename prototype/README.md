@@ -19,7 +19,12 @@ skins. Open either in any browser (phone, iPad, laptop) — no build, no install
   cart, wagon), so purchases follow what you're becoming good at; and a
   **M.U.L.E.-style end-of-day reveal** — everyone's earnings broken down by work
   type as stacked bars, what you left on the table (flubbed tips, wasted walks,
-  jobs undone), and your skills leveling up.
+  jobs undone), and your skills leveling up. v0.5 fixes: tools now light a **gold
+  dot** on their track (so a tool visibly boosts that capability), rivals now
+  **prospect with the same uncertainty you do** (they read cues and sometimes
+  strike out, instead of having perfect info), and a **fair-clock fix** so rivals
+  advance by daylight spent rather than by your number of turns — verified fair
+  (symmetric play ≈ even; a tool-buying human gets a gentle edge).
 - **`overboard-greybox.html` — Overboard (earlier fishing version).** Kept for
   reference; same core loop with a fishing skin. The notes below describe it.
 

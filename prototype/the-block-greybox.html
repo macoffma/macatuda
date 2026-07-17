@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>The Block — Greybox v0.4</title>
+<title>The Block — Greybox v0.5</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%98%EF%B8%8F</text></svg>">
 <style>
@@ -85,7 +85,7 @@
   .caps{display:flex;flex-direction:column;gap:8px}
   .caprow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .caprow .nm{width:104px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
-  .lvl{display:inline-flex;gap:3px} .lvl .d{width:12px;height:8px;border-radius:2px;background:var(--line)} .lvl .d.on{background:var(--accent)}
+  .lvl{display:inline-flex;gap:3px} .lvl .d{width:12px;height:8px;border-radius:2px;background:var(--line)} .lvl .d.on{background:var(--accent)} .lvl .d.tool{background:var(--gold)}
   .xpbar{flex:1;min-width:70px;max-width:150px;height:7px;border-radius:4px;background:var(--panel-2);overflow:hidden} .xpbar .f{height:100%;background:var(--accent);opacity:.6}
   .caprow .lvup{font-size:11px;color:var(--gold);font-weight:800}
   .toolbtn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink);padding:6px 11px;border-radius:8px;font-size:12.5px;font-weight:700}
@@ -170,7 +170,7 @@ function newGame(np, days){
   const cells=[]; for(let x=0;x<CFG.gridW;x++)for(let y=0;y<CFG.gridH;y++)cells.push({x,y});
   for(let i=cells.length-1;i>0;i--){ const j=rnd(i+1); const t=cells[i];cells[i]=cells[j];cells[j]=t; }
   let ci=0; const fams=FAMS.slice(), houses=[];
-  for(let i=0;i<CFG.houses;i++){ const c=cells[ci++]; const nt=1+(Math.random()<0.5?1:0), traits=[]; while(traits.length<nt){ const t=pick(TRAITKEYS); if(!traits.includes(t))traits.push(t); }
+  for(let i=0;i<CFG.houses;i++){ const c=cells[ci++]; const nt=Math.random()<0.18?0:(1+(Math.random()<0.5?1:0)), traits=[]; while(traits.length<nt){ const t=pick(TRAITKEYS); if(!traits.includes(t))traits.push(t); }
     houses.push({ id:i, kind:"house", x:c.x, y:c.y, fam:fams.splice(rnd(fams.length),1)[0]||("#"+i), traits, quirk:Math.random()<0.4?pick(["rich","grumpy","wild"]):"none", seen:false, need:null, jobBase:0, done:false }); }
   const corners=[]; const cnames=["the busy corner","the park gate","the pool entrance"];
   for(let i=0;i<CFG.corners;i++){ const c=cells[ci++]; corners.push({ id:100+i, kind:"corner", x:c.x, y:c.y, name:cnames[i]||"a corner", traffic:2+rnd(2), takenBy:null }); }
@@ -188,7 +188,7 @@ function startDay(){
   S.corners.forEach(c=>c.takenBy=null);
   S.houses.forEach(h=>{ h.done=false; h.need=null; h.jobBase=0;
     const svcs=h.traits.map(t=>TRAIT[t].svc), aligned=svcs.some(s=>S.weather.boosts.includes(s));
-    const p=0.5+(aligned?0.32:0)+(h.quirk==="rich"?0.1:0);
+    const p = svcs.length ? Math.min(0.92, 0.15+0.4+(aligned?0.35:0)+(h.quirk==="rich"?0.08:0)) : 0; // no cues = never hiring (a bad knock)
     if(Math.random()<p){ const boosted=svcs.filter(s=>S.weather.boosts.includes(s)); h.need=boosted.length?pick(boosted):pick(svcs); h.jobBase=3+rnd(3); } });
   // reset the day's ledger for the reveal
   const earned={},flubLost={},wasted={},leveled={};
@@ -207,8 +207,12 @@ function svcPayFor(id,h){ let p=h.jobBase + QUIRK[h.quirk].basePay + (lvlOf(id,h
 function flubRisk(id,cap,quirk){ return Math.max(0.03, 0.13 + QUIRK[quirk].flub - 0.03*(lvlOf(id,cap)-1) - (hasTool(id,cap)?0.04:0)); }
 function standPerHour(id,c,hour){ return Math.max(1, Math.round((c.traffic*STATE.weather.stand + (lvlOf(id,"stand")-1) + (hasTool(id,"stand")?2:0)) * (1-0.16*hour))); }
 function standEstimate(id,c){ return standPerHour(id,c,0)+standPerHour(id,c,1); }
-function targetValue(id,node){ const t=travelH(id,node); if(node.kind==="house") return (node.need?svcPayFor(id,node):0)-t*1.2; return standEstimate(id,node)-t*1.2; }
-function bestTargetFor(id){ const S=STATE; const opts=[...S.houses.filter(h=>!h.done&&h.need&&travelH(id,h)+CFG.jobTime<=S.daylight[id]), ...S.corners.filter(c=>c.takenBy===null&&travelH(id,c)+CFG.standSetup+1<=S.daylight[id])];
+// what everyone reads off the cues + weather (NOT the hidden truth) — so rivals prospect and sometimes strike out too
+function predictNeed(h){ const svcs=h.traits.map(t=>TRAIT[t].svc); if(!svcs.length)return 0.03; const aligned=svcs.some(s=>STATE.weather.boosts.includes(s)); return Math.min(0.92,0.15+0.4+(aligned?0.35:0)+(h.quirk==="rich"?0.08:0)); }
+function estHouseValue(id,h){ const svcs=h.traits.map(t=>TRAIT[t].svc); if(!svcs.length)return 0; const boosted=svcs.filter(s=>STATE.weather.boosts.includes(s)); const svc=boosted.length?boosted[0]:svcs[0];
+  let pay=4.5+QUIRK[h.quirk].basePay+(lvlOf(id,svc)-1)+(hasTool(id,svc)?2:0); if(STATE.weather.boosts.includes(svc))pay*=CFG.boostMult; if(STATE.goodwill>=8)pay+=1; else if(STATE.goodwill<=CFG.soured)pay=Math.max(1,pay-1); return pay*predictNeed(h); }
+function targetValue(id,node){ const t=travelH(id,node); if(node.kind==="house") return estHouseValue(id,node)-t*1.2; return standEstimate(id,node)-t*1.2; }
+function bestTargetFor(id){ const S=STATE; const opts=[...S.houses.filter(h=>!h.done&&h.traits.length&&travelH(id,h)+CFG.jobTime<=S.daylight[id]), ...S.corners.filter(c=>c.takenBy===null&&travelH(id,c)+CFG.standSetup+1<=S.daylight[id])];
   if(!opts.length)return null; return opts.slice().sort((a,b)=>targetValue(id,b)-targetValue(id,a))[0]; }
 function humanCanAct(){ const S=STATE; return S.houses.some(h=>!h.done&&travelH(0,h)+CFG.jobTime<=S.daylight[0])||S.corners.some(c=>c.takenBy===null&&travelH(0,c)+CFG.standSetup+1<=S.daylight[0]); }
 
@@ -232,8 +236,8 @@ function stand(cid){ const S=STATE, c=S.corners.find(x=>x.id===cid); if(!c||c.ta
 function raceFor(node,tHuman){ const S=STATE; let beater=null,bt=tHuman;
   S.players.filter(p=>!p.human).forEach(p=>{ const tgt=bestTargetFor(p.id); if(tgt&&tgt.id===node.id){ const t=travelH(p.id,node); if(t<bt){bt=t;beater=p;} } }); return beater; }
 function loseRace(p,node,t){ const S=STATE; S.daylight[0]-=t; S.pos[0]={x:node.x,y:node.y}; S.today.wasted[0].count++; S.today.wasted[0].hours+=t;
-  const where=node.kind==="house"?`the ${node.fam}s'`:node.name; if(node.kind==="house")aiDoJob(p,node); else aiRunStand(p,node);
-  S.notice=`${p.name} beat you to ${where} — you lost ${t}h on the trip!`; log(`<span class="ln"><span class="r">${p.name} beat you to ${where}!</span></span>`); aiRound(p.id); afterHumanAction(); }
+  const where=node.kind==="house"?`the ${node.fam}s'`:node.name; if(node.kind==="house")aiKnock(p,node); else aiRunStand(p,node);
+  S.notice=`${p.name} beat you to ${where} — you lost ${t}h on the trip!`; log(`<span class="ln"><span class="r">${p.name} beat you to ${where}!</span></span>`); aiCatchUp(); afterHumanAction(); }
 function afterHumanAction(){ const S=STATE; if(humanCanAct()){ S.phase="map"; render(); } else endHumanDay(); }
 
 /* ---- work (tips) ---- */
@@ -251,7 +255,7 @@ function finishJob(){ const S=STATE, W=S.work; S.daylight[0]=Math.max(0,S.daylig
   S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(W.flubbed?-1:1))); gainXP(0,W.svc);
   S.pay={ kind:"job", earned, base:W.base, tips:W.flubbed?0:W.tips, flubbed:W.flubbed, boosted:W.boosted, label:`${SVC[W.svc].name} · the ${W.fam}s'` };
   log(`<span class="ln"><b style="color:#2f9e5c">You</b> ${SVC[W.svc].verb} at the ${W.fam}s' — <span class="${W.flubbed?'r':'g'}">${cash(earned)}</span>${W.flubbed?" (flubbed the tip)":W.tips?` <span class="gold">(+${cash(W.tips)} tips)</span>`:""}.</span>`);
-  S.work=null; aiRound(null); S.phase="payday"; render(); }
+  S.work=null; aiCatchUp(); S.phase="payday"; render(); }
 /* ---- stand ---- */
 function standSell(action){ const S=STATE, R=S.standRun; if(!R||R.done)return;
   if(action==="packup"){ R.done=true; finishStand(); return; }
@@ -262,11 +266,12 @@ function finishStand(){ const S=STATE, R=S.standRun; const c=S.corners.find(x=>x
   S.money[0]+=R.sold; S.today.earned[0].stand+=R.sold; gainXP(0,"stand");
   S.pay={ kind:"stand", earned:R.sold, base:0, tips:0, flubbed:false, boosted:S.weather.stand>=3, label:`${R.prod} stand · ${R.spot}` };
   log(`<span class="ln"><b style="color:#2f9e5c">You</b> ran a ${R.prod} stand at ${R.spot} — <span class="g">${cash(R.sold)}</span>.</span>`);
-  S.standRun=null; aiRound(null); S.phase="payday"; render(); }
+  S.standRun=null; aiCatchUp(); S.phase="payday"; render(); }
 function paydayNext(){ afterHumanAction(); }
 
 /* ---- rivals ---- */
-function aiDoJob(p,h){ const S=STATE; S.daylight[p.id]-=travelH(p.id,h); S.pos[p.id]={x:h.x,y:h.y}; h.done=true; h.seen=true;
+function aiKnock(p,h){ const S=STATE; S.daylight[p.id]-=travelH(p.id,h); S.pos[p.id]={x:h.x,y:h.y}; h.done=true; h.seen=true;
+  if(!h.need){ log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> knocked at the ${h.fam}s' — <span class="r">no work there</span>.</span>`); return; }
   let base=svcPayFor(p.id,h), tips=0, risk=flubRisk(p.id,h.need,h.quirk), flub=false;
   const pushes=p.pers==="greedy"?3:p.pers==="cautious"?1:1+rnd(3);
   for(let k=0;k<pushes;k++){ if(S.daylight[p.id]<CFG.touchTime)break; S.daylight[p.id]-=CFG.touchTime; if(Math.random()<risk){flub=true;break;} tips+=Math.round(CFG.tip*QUIRK[h.quirk].tipMul); risk+=0.16; }
@@ -277,8 +282,14 @@ function aiRunStand(p,c){ const S=STATE; S.daylight[p.id]-=travelH(p.id,c)+CFG.s
   const hours=p.pers==="greedy"?4:p.pers==="cautious"?2:1+rnd(3); let sold=0; for(let hr=0;hr<hours;hr++){ if(S.daylight[p.id]<1)break; S.daylight[p.id]-=1; sold+=standPerHour(p.id,c,hr); }
   S.money[p.id]+=sold; S.today.earned[p.id].stand+=sold; gainXP(p.id,"stand");
   log(`<span class="ln"><b style="color:${p.color}">${p.name}</b> ran a ${S.weather.prod} stand at ${c.name} — <span class="g">${cash(sold)}</span>.</span>`); }
-function aiTurn(p){ const t=bestTargetFor(p.id); if(!t)return false; if(t.kind==="house")aiDoJob(p,t); else aiRunStand(p,t); return true; }
-function aiRound(exclude){ STATE.players.filter(p=>!p.human&&p.id!==exclude).forEach(p=>aiTurn(p)); }
+// rivals are neighborhood kids, not sweaty optimizers — they mostly pick well but make human-ish misjudgments
+function aiPickTarget(id){ const S=STATE; const opts=[...S.houses.filter(h=>!h.done&&h.traits.length&&travelH(id,h)+CFG.jobTime<=S.daylight[id]), ...S.corners.filter(c=>c.takenBy===null&&travelH(id,c)+CFG.standSetup+1<=S.daylight[id])];
+  if(!opts.length)return null; opts.sort((a,b)=>targetValue(id,b)-targetValue(id,a));
+  const r=Math.random(); const idx = r<0.5?0 : r<0.8?Math.min(1,opts.length-1) : rnd(opts.length); return opts[idx]; }
+function aiTurn(p){ const t=aiPickTarget(p.id); if(!t)return false; if(t.kind==="house")aiKnock(p,t); else aiRunStand(p,t); return true; }
+// keep rivals in step with YOU by daylight spent (not by how many times you act) — fair, and no bonus turns on a whiff
+function aiCatchUp(){ const S=STATE; let guard=0; while(guard++<80){ let acted=false;
+  S.players.filter(p=>!p.human).forEach(p=>{ if(S.daylight[p.id]>S.daylight[0] && aiTurn(p)) acted=true; }); if(!acted)break; } }
 function endHumanDay(){ const S=STATE; let guard=0; while(guard++<40){ let acted=false; S.players.filter(p=>!p.human).forEach(p=>{ if(aiTurn(p))acted=true; }); if(!acted)break; } startStore(); }
 function startStore(){ STATE.phase="store"; render(); }
 function buyTool(cap){ const S=STATE; const item=cap==="wagon"?WAGON:CAPMETA[cap].tool;
@@ -292,7 +303,9 @@ function endGame(){ const S=STATE; S.soured=S.goodwill<=CFG.soured; S.phase="ove
 function moodOf(gw){ if(gw<=CFG.soured)return{t:"Grumbling",c:"var(--bad)",f:"bad"}; if(gw>=8)return{t:"Loves you kids!",c:"var(--good)",f:""}; return{t:"Friendly",c:"var(--warn)",f:"warn"}; }
 function boostList(){ return STATE.weather.boosts.map(k=>SVC[k].em).join(" "); }
 function px(v,max){ return v/(max-1)*88+6; }
-function lvlDots(id,cap){ const l=lvlOf(id,cap); let s=""; for(let i=0;i<5;i++)s+=`<span class="d ${i<l?'on':''}"></span>`; return `<span class="lvl">${s}</span>`; }
+function lvlDots(id,cap){ const l=lvlOf(id,cap), tool=hasTool(id,cap); let s="";
+  for(let i=0;i<5;i++){ const on=i<l, gold=tool&&i===l&&l<5; s+=`<span class="d ${on?'on':''} ${gold?'tool':''}"></span>`; }
+  return `<span class="lvl">${s}</span>`; }
 function xpFrac(id,cap){ const xp=STATE.skill[id][cap], l=lvlOf(id,cap); if(l>=5)return 1; const lo=XPLVL[l-1],hi=XPLVL[l]; return (xp-lo)/(hi-lo); }
 
 function hud(){ const S=STATE, gw=S.goodwill, m=moodOf(gw), dl=S.daylight[0];
@@ -351,7 +364,7 @@ function stageStore(){ const S=STATE, c=S.money[0];
     return `<div class="caprow"><span class="nm">${m.em} ${m.name}</span>${lvlDots(0,cap)}<span class="xpbar"><span class="f" style="width:${Math.round(xpFrac(0,cap)*100)}%"></span></span>${btn}</div>`; }).join("");
   const wagon=S.tool[0].wagon?`<button class="toolbtn owned" disabled>${WAGON.em} ${WAGON.name} ✓</button>`:`<button class="toolbtn" data-act="buytool" data-cap="wagon" ${c>=WAGON.cost?"":"disabled"}>${WAGON.em} ${WAGON.name} · ${cash(WAGON.cost)}</button>`;
   return `<div class="stage"><h2>Corner store 🏪 · your capabilities</h2>
-    <div class="hint">You've got ${cash(c)}. You get better at each job by <b>doing it</b> (the dots) — the store sells the <b>tools</b> that boost a track. Buy toward what you're becoming good at.</div>
+    <div class="hint">You've got ${cash(c)}. Each track's dots show your <b style="color:var(--accent)">skill</b> (green — earned by doing the work) plus the <b style="color:var(--gold)">tool</b> (gold — bought here). Both raise your pay and cut flubs, so buy toward what you're already good at.</div>
     ${rows}
     <div class="caprow" style="margin-top:10px"><span class="nm">🛒 Get around</span><span style="flex:1;font-size:12px;color:var(--muted)">${WAGON.desc}</span>${wagon}</div>
     <div class="btnrow"><button class="btn primary" data-act="store-done">Home for the night →</button></div></div>`; }
