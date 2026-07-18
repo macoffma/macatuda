@@ -24,7 +24,13 @@ skins. Open either in any browser (phone, iPad, laptop) — no build, no install
   **prospect with the same uncertainty you do** (they read cues and sometimes
   strike out, instead of having perfect info), and a **fair-clock fix** so rivals
   advance by daylight spent rather than by your number of turns — verified fair
-  (symmetric play ≈ even; a tool-buying human gets a gentle edge).
+  (symmetric play ≈ even; a tool-buying human gets a gentle edge). v0.6 adds a
+  **mowing micro-game** (one job type, as a test): instead of a dice-roll tip,
+  tap when the mower's in the green to lay a neat stripe — the zone narrows and
+  speeds up each stripe (press-your-luck as *skill*), and a miss veers into the
+  flowerbed. Only the tip layer is skill-based; base pay and the map/economy
+  strategy are untouched. The other jobs still use the dice tip, so you can feel
+  the difference side by side.
 - **`overboard-greybox.html` — Overboard (earlier fishing version).** Kept for
   reference; same core loop with a fishing skin. The notes below describe it.
 
