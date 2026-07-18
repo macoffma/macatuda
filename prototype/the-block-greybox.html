@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>The Block — Greybox v0.6</title>
+<title>The Block — Greybox v0.7</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%98%EF%B8%8F</text></svg>">
 <style>
@@ -42,16 +42,16 @@
   .stand .p{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
   .chip{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:middle}
   .cash{font-family:var(--mono);font-weight:800}
-  .map{position:relative;background:var(--road);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:100%;aspect-ratio:7/4.4;margin:6px 0 12px;overflow:hidden}
+  .map{position:relative;background:var(--road);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:100%;aspect-ratio:7/5.2;margin:6px 0 12px;overflow:hidden}
   .map .grid{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:14.28% 20%;opacity:.35}
-  .node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:transparent;color:inherit;padding:0;min-width:54px}
+  .node{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:transparent;color:inherit;padding:0;min-width:40px}
   .node .pin{width:36px;height:36px;border-radius:9px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow);position:relative}
   button.node:not(:disabled) .pin{border-color:var(--accent);cursor:pointer}
   button.node:not(:disabled):hover .pin{transform:translateY(-2px)}
   .node.need .pin{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
   .node.corner .pin{border-radius:50%;background:color-mix(in srgb,var(--sky) 18%,var(--panel))}
   .node.done{opacity:.4}
-  .node .cues{position:absolute;top:-8px;right:-8px;font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 3px;line-height:15px}
+  .node .cues{position:absolute;top:-7px;right:-3px;font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 3px;line-height:15px;white-space:nowrap}
   .node .cap{font-size:10px;font-weight:700;white-space:nowrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 5px;line-height:16px}
   .node .cap.gold{color:var(--gold);border-color:var(--gold)}
   .kid{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);z-index:3;font-size:10px;display:flex;align-items:center;justify-content:center;pointer-events:none}
@@ -156,7 +156,7 @@ const WEATHER=[
 ];
 const QUIRK={ none:{tag:"",basePay:0,tipMul:1,flub:0}, rich:{tag:"big tippers",basePay:2,tipMul:1,flub:0}, grumpy:{tag:"tight with tips",basePay:0,tipMul:0.5,flub:0}, wild:{tag:"a real handful",basePay:1,tipMul:1,flub:0.15} };
 const WAGON={ key:"wagon", name:"Wagon", em:"🛒", cost:9, desc:"Haul your gear around — travel takes half the time." };
-const VERSION="0.6";
+const VERSION="0.7";
 const CFG={ startCash:5, days:5, daylight:12, jobTime:2, touchTime:1, standSetup:1, tip:2, goodwill0:6, gwMax:10, soured:3, boostMult:2, gridW:7, gridH:5, houses:9, corners:2 };
 const XPLVL=[0,2,4,7,11]; // xp needed for lvl 1..5 (index)
 
@@ -180,6 +180,7 @@ function newGame(np, days){
   let ci=0; const fams=FAMS.slice(), houses=[];
   for(let i=0;i<CFG.houses;i++){ const c=cells[ci++]; const nt=Math.random()<0.18?0:(1+(Math.random()<0.5?1:0)), traits=[]; while(traits.length<nt){ const t=pick(TRAITKEYS); if(!traits.includes(t))traits.push(t); }
     houses.push({ id:i, kind:"house", x:c.x, y:c.y, fam:fams.splice(rnd(fams.length),1)[0]||("#"+i), traits, quirk:Math.random()<0.4?pick(["rich","grumpy","wild"]):"none", seen:false, need:null, jobBase:0, done:false }); }
+  for(let k=0;k<2 && k<houses.length;k++){ houses[k].traits=["lawn"]; } // guarantee a couple of lawn houses so mowing is easy to find
   const corners=[]; const cnames=["the busy corner","the park gate","the pool entrance"];
   for(let i=0;i<CFG.corners;i++){ const c=cells[ci++]; corners.push({ id:100+i, kind:"corner", x:c.x, y:c.y, name:cnames[i]||"a corner", traffic:2+rnd(2), takenBy:null }); }
   const home=cells[ci++]||{x:0,y:2}; const aiHomes=[cells[ci++]||{x:6,y:0},cells[ci++]||{x:6,y:4},cells[ci++]||{x:0,y:4}];
@@ -334,7 +335,7 @@ function endGame(){ const S=STATE; S.soured=S.goodwill<=CFG.soured; S.phase="ove
 /* ---------- render ---------- */
 function moodOf(gw){ if(gw<=CFG.soured)return{t:"Grumbling",c:"var(--bad)",f:"bad"}; if(gw>=8)return{t:"Loves you kids!",c:"var(--good)",f:""}; return{t:"Friendly",c:"var(--warn)",f:"warn"}; }
 function boostList(){ return STATE.weather.boosts.map(k=>SVC[k].em).join(" "); }
-function px(v,max){ return v/(max-1)*88+6; }
+function px(v,max){ return v/(max-1)*72+14; }  // keep pins & labels well inside the map edges
 function lvlDots(id,cap){ const l=lvlOf(id,cap), tool=hasTool(id,cap); let s="";
   for(let i=0;i<5;i++){ const on=i<l, gold=tool&&i===l&&l<5; s+=`<span class="d ${on?'on':''} ${gold?'tool':''}"></span>`; }
   return `<span class="lvl">${s}</span>`; }
@@ -352,11 +353,11 @@ function hud(){ const S=STATE, gw=S.goodwill, m=moodOf(gw), dl=S.daylight[0];
 function mapView(){ const S=STATE, flyers=S.tool[0].wagon?false:false; // (flyers folded into knowing needs via 'seen'); needs shown only if learned
   const nodes=S.houses.map(h=>{ const afford=!h.done&&travelH(0,h)+CFG.jobTime<=S.daylight[0]; let cls="node",cap="",cues="";
     if(h.done){ cls+=" done"; cap=`<span class="cap">done</span>`; }
-    else { cues=`<span class="cues">${h.traits.map(t=>TRAIT[t].em).join("")}</span>`; cap=`<span class="cap">${travelH(0,h)}h${h.seen&&QUIRK[h.quirk].tag?" · "+QUIRK[h.quirk].tag:""}</span>`; }
+    else { const qe=(h.seen&&h.quirk!=="none")?{rich:"💰",grumpy:"😾",wild:"🌀"}[h.quirk]:""; cues=`<span class="cues">${h.traits.map(t=>TRAIT[t].em).join("")}${qe}</span>`; cap=`<span class="cap">${travelH(0,h)}h</span>`; }
     const tag=afford?"button":"div", attr=afford?`data-act="knock" data-id="${h.id}"`:"";
     return `<${tag} class="${cls}" style="left:${px(h.x,CFG.gridW)}%;top:${px(h.y,CFG.gridH)}%" ${attr}><span class="pin">🏠</span>${cues}${cap}</${tag}>`; }).join("");
   const corners=S.corners.map(c=>{ const taken=c.takenBy!==null, afford=!taken&&travelH(0,c)+CFG.standSetup+1<=S.daylight[0];
-    const cap=taken?`<span class="cap">taken</span>`:`<span class="cap ${S.weather.stand>=3?'gold':''}">stand · ${travelH(0,c)}h · ${"▮".repeat(c.traffic)}</span>`;
+    const cap=taken?`<span class="cap">taken</span>`:`<span class="cap ${S.weather.stand>=3?'gold':''}">${travelH(0,c)}h</span>`;
     const tag=afford?"button":"div", attr=afford?`data-act="stand" data-id="${c.id}"`:"";
     return `<${tag} class="node corner ${taken?'done':''}" style="left:${px(c.x,CFG.gridW)}%;top:${px(c.y,CFG.gridH)}%" ${attr}><span class="pin">🥤</span>${cap}</${tag}>`; }).join("");
   const kids=S.players.map(p=>`<div class="kid" title="${p.name}" style="left:${px(S.pos[p.id].x,CFG.gridW)}%;top:${px(S.pos[p.id].y,CFG.gridH)}%;background:${p.color}">${p.human?"🧒":""}</div>`).join("");
