@@ -1,0 +1,298 @@
+<title>The Block — Two-Screen Vision</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --ground:#e9efe6; --panel:#fbfdf8; --panel-2:#eef4e8; --line:#cfdac6; --ink:#1b2718; --muted:#5b6b53; --faint:#93a389;
+    --grass:#2f9e5c; --gold:#c9971e; --sky:#2b8fd6; --mood:#e0b155;
+    --mow:#5aa02c; --rake:#c98a2c; --sit:#c65a8a; --wash:#2b8fd6; --dog:#8a6cc9; --lem:#d0b02c;
+    --bezel:#20281c; --bezel-2:#161c13; --screen:#f4f8ef;
+    --shadow:0 1px 0 rgba(0,0,0,.03),0 10px 30px rgba(25,45,20,.09);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root{
+    --ground:#0c1410; --panel:#121c15; --panel-2:#17241a; --line:#26372a; --ink:#dcecd6; --muted:#83a07f; --faint:#5a7358;
+    --grass:#5cc47f; --gold:#e5c264; --sky:#5cb4e6; --mood:#e5c060;
+    --mow:#7bbf4d; --rake:#e0a458; --sit:#e07ba8; --wash:#5cb4e6; --dog:#a98ce0; --lem:#e5cf5c;
+    --bezel:#0a0f0a; --bezel-2:#05080550; --screen:#0f1a12; --shadow:0 1px 0 rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.5); } }
+  :root[data-theme="light"]{ --ground:#e9efe6; --panel:#fbfdf8; --panel-2:#eef4e8; --line:#cfdac6; --ink:#1b2718; --muted:#5b6b53; --faint:#93a389; --grass:#2f9e5c; --gold:#c9971e; --sky:#2b8fd6; --mow:#5aa02c; --rake:#c98a2c; --sit:#c65a8a; --wash:#2b8fd6; --dog:#8a6cc9; --lem:#d0b02c; --bezel:#20281c; --bezel-2:#161c13; --screen:#f4f8ef; --shadow:0 1px 0 rgba(0,0,0,.03),0 10px 30px rgba(25,45,20,.09); }
+  :root[data-theme="dark"]{ --ground:#0c1410; --panel:#121c15; --panel-2:#17241a; --line:#26372a; --ink:#dcecd6; --muted:#83a07f; --faint:#5a7358; --grass:#5cc47f; --gold:#e5c264; --sky:#5cb4e6; --mow:#7bbf4d; --rake:#e0a458; --sit:#e07ba8; --wash:#5cb4e6; --dog:#a98ce0; --lem:#e5cf5c; --bezel:#0a0f0a; --bezel-2:#050805; --screen:#0f1a12; --shadow:0 1px 0 rgba(0,0,0,.4),0 14px 40px rgba(0,0,0,.5); }
+
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.5;margin:0;-webkit-text-size-adjust:100%}
+  .wrap{max-width:1160px;margin:0 auto;padding:22px 18px 72px}
+  .head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:14px}
+  .head h1{font-size:clamp(22px,3.2vw,30px);font-weight:850;letter-spacing:-.01em;margin:0;text-wrap:balance}
+  .head h1 .b{color:var(--grass)}
+  .head .sub{font-size:13px;color:var(--muted);max-width:46ch}
+  .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);font-weight:700}
+
+  /* scene tabs */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 6px}
+  .tab{border:1px solid var(--line);background:var(--panel);color:var(--muted);padding:8px 14px;border-radius:999px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .tab:hover{border-color:var(--grass);color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--grass);border-color:var(--grass);color:#04210f}
+  .tab .n{font-family:var(--mono);opacity:.6;margin-right:6px}
+
+  .note{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--muted);background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--grass);border-radius:8px;padding:9px 13px;margin:14px 0 6px}
+  .note b{color:var(--ink)}
+
+  .stage{display:grid;grid-template-columns:1.62fr .95fr;gap:26px;align-items:start;margin-top:16px}
+  @media (max-width:820px){ .stage{grid-template-columns:1fr} }
+  .screencap{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);font-weight:700;margin:0 0 8px 2px;display:flex;gap:8px;align-items:center}
+  .screencap .dotd{width:7px;height:7px;border-radius:50%;background:var(--grass)}
+
+  /* TV device */
+  .tv{background:linear-gradient(160deg,var(--bezel),var(--bezel-2));border-radius:18px;padding:14px 14px 16px;box-shadow:var(--shadow)}
+  .tv .screen{background:var(--screen);border-radius:9px;overflow:hidden;aspect-ratio:16/10;position:relative;border:1px solid rgba(0,0,0,.25)}
+  .tv .stand{width:96px;height:9px;background:var(--bezel);border-radius:0 0 9px 9px;margin:8px auto 0;opacity:.85}
+  .tv .foot{width:150px;height:6px;background:var(--bezel-2);border-radius:6px;margin:5px auto 0;opacity:.7}
+
+  /* phone device */
+  .phone{width:100%;max-width:288px;margin:0 auto;background:linear-gradient(160deg,var(--bezel),var(--bezel-2));border-radius:34px;padding:12px;box-shadow:var(--shadow)}
+  .phone .glass{background:var(--screen);border-radius:24px;overflow:hidden;aspect-ratio:9/18.5;position:relative;border:1px solid rgba(0,0,0,.25)}
+  .phone .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:88px;height:16px;background:var(--bezel);border-radius:10px;z-index:5}
+
+  /* ---- board (TV screen contents) ---- */
+  .board{position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 14px;gap:9px}
+  .board .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .phase{font-size:clamp(15px,2.3vw,22px);font-weight:900;letter-spacing:.02em;text-transform:uppercase;color:var(--ink);line-height:1}
+  .phase small{display:block;font-size:11px;letter-spacing:.14em;color:var(--faint);font-weight:800;margin-bottom:3px}
+  .wx{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-weight:800;font-size:13px}
+  .wx .hot{color:var(--gold)}
+  .board .body{flex:1;display:grid;grid-template-columns:1fr 172px;gap:12px;min-height:0}
+
+  .map{position:relative;background:
+      repeating-linear-gradient(90deg,transparent 0 46px,color-mix(in srgb,var(--line) 45%,transparent) 46px 48px),
+      repeating-linear-gradient(0deg,transparent 0 40px,color-mix(in srgb,var(--line) 45%,transparent) 40px 42px),
+      color-mix(in srgb,var(--grass) 8%,var(--panel));
+      border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .road{position:absolute;background:color-mix(in srgb,var(--ink) 12%,var(--panel-2));}
+  .h{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .h .pin{width:34px;height:34px;border-radius:9px;background:var(--panel);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 5px rgba(0,0,0,.12);position:relative}
+  .h.hiring .pin{border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 40%,transparent)}
+  .h.done .pin{opacity:.4}
+  .h .cue{position:absolute;top:-8px;right:-7px;font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:0 3px;line-height:15px}
+  .h.corner .pin{border-radius:50%;background:color-mix(in srgb,var(--sky) 20%,var(--panel))}
+  .kid{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:12px;z-index:4;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .kid .tag{position:absolute;top:-15px;font-size:9px;font-weight:800;background:var(--ink);color:var(--panel);padding:0 5px;border-radius:6px;white-space:nowrap}
+  .spark{position:absolute;transform:translate(-50%,-50%);font-size:15px;animation:pop .5s ease}
+
+  .lead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:9px;min-width:0}
+  .lead .lh{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--faint);font-weight:800}
+  .lp{display:flex;align-items:center;gap:8px}
+  .lp .av{width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+  .lp .nm{font-size:12px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lp .co{font-family:var(--mono);font-weight:800;font-size:13px}
+  .lp .bar{height:5px;border-radius:3px;background:var(--panel-2);overflow:hidden;margin-top:3px}
+  .lp .bar i{display:block;height:100%;border-radius:3px}
+  .lpwrap{display:flex;flex-direction:column;gap:2px}
+
+  /* garage sale scene */
+  .sale{flex:1;display:grid;grid-template-columns:1fr 172px;gap:12px;min-height:0}
+  .table{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px;display:flex;flex-direction:column;gap:10px}
+  .items{display:flex;gap:9px}
+  .item{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 6px;text-align:center;background:var(--panel-2);opacity:.55}
+  .item.up{opacity:1;border-color:var(--gold);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent);background:var(--panel)}
+  .item .ie{font-size:24px} .item .inm{font-size:10px;font-weight:700;color:var(--muted);margin-top:2px}
+  .bidbig{margin-top:auto;display:flex;align-items:baseline;gap:10px}
+  .bidbig .amt{font-family:var(--mono);font-weight:900;font-size:34px;color:var(--gold)}
+  .bidbig .who{font-size:13px;font-weight:800}
+  .bidrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .bidchip{font-size:11px;font-weight:800;border-radius:999px;padding:2px 8px;border:1px solid var(--line)}
+
+  /* payday reveal */
+  .reveal{flex:1;display:flex;flex-direction:column;gap:9px;justify-content:center;padding:2px 4px}
+  .erow{display:flex;align-items:center;gap:10px}
+  .erow .who{width:74px;font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:6px}
+  .erow .track{flex:1;height:22px;border-radius:6px;background:var(--panel-2);overflow:hidden;display:flex;border:1px solid var(--line)}
+  .erow .seg{height:100%}
+  .erow .tot{width:44px;text-align:right;font-family:var(--mono);font-weight:900}
+  .swk{display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--muted);justify-content:center}
+  .swk .s{display:inline-flex;align-items:center;gap:5px}.swk .sw{width:9px;height:9px;border-radius:3px}
+
+  /* ---- phone screen contents ---- */
+  .cock{position:absolute;inset:0;display:flex;flex-direction:column;padding:30px 14px 16px;gap:11px}
+  .cock .me{display:flex;align-items:center;gap:8px}
+  .cock .me .av{width:26px;height:26px;border-radius:50%;background:var(--grass);color:#04210f;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid #fff}
+  .cock .me .co{margin-left:auto;font-family:var(--mono);font-weight:900;font-size:16px;color:var(--gold)}
+  .cock .me .tools{display:flex;gap:3px;font-size:13px}
+  .cock .lead2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:800}
+  .cock .big{font-size:19px;font-weight:900;line-height:1.15;letter-spacing:-.01em}
+  .choice{border:1.5px solid var(--line);background:var(--panel);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;font-weight:800}
+  .choice.go{border-color:var(--grass)} .choice .ce{font-size:20px} .choice .cs{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:800}
+  .cock .spacer{flex:1}
+  .pbtn{border:0;border-radius:12px;padding:14px;font-weight:900;font-size:16px;background:var(--grass);color:#04210f;text-align:center}
+  .pbtn.sub{background:var(--panel);border:1.5px solid var(--line);color:var(--ink);font-size:14px;padding:11px}
+  .lookup{background:color-mix(in srgb,var(--gold) 18%,var(--panel));border:1.5px solid var(--gold);border-radius:12px;padding:12px;text-align:center;font-weight:900;color:var(--ink)}
+
+  /* mowing micro-game on phone */
+  .mow-track{position:relative;height:46px;border-radius:9px;overflow:hidden;border:1px solid var(--line);
+    background:repeating-linear-gradient(90deg,var(--panel-2) 0 9px,color-mix(in srgb,var(--mow) 12%,var(--panel-2)) 9px 18px)}
+  .mow-zone{position:absolute;top:0;bottom:0;left:44%;width:26%;background:color-mix(in srgb,var(--mow) 36%,transparent);border-inline:2px solid var(--mow)}
+  .mow-mk{position:absolute;top:-2px;bottom:-2px;left:52%;width:6px;background:var(--ink);border-radius:3px;box-shadow:0 0 8px rgba(0,0,0,.4)}
+  .stripes{display:flex;gap:4px}.stripes i{width:15px;height:8px;border-radius:2px;background:var(--mow)}
+
+  @keyframes pop{from{transform:translate(-50%,-50%) scale(.4);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  @media (prefers-reduced-motion:reduce){.spark{animation:none}}
+  .legend{margin-top:34px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:13.5px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .legend h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 6px}
+  .legend b{color:var(--ink)}
+</style>
+
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="kicker">The Block · design vision</div>
+      <h1>One game, <span class="b">two screens</span>.</h1>
+    </div>
+    <div class="sub">A mockup of the shared <b>TV board</b> everyone watches and the private <b>phone cockpit</b> each player holds. Flip through a few moments. Notice how few words are on either screen — it reads off the map and the standings.</div>
+  </div>
+
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div class="note" id="note"></div>
+
+  <div class="stage">
+    <div>
+      <div class="screencap"><span class="dotd"></span> The TV · everyone watches</div>
+      <div class="tv"><div class="screen" id="tv"></div><div class="stand"></div><div class="foot"></div></div>
+    </div>
+    <div>
+      <div class="screencap"><span class="dotd"></span> Your phone · you tap</div>
+      <div class="phone"><div class="glass"><div class="notch"></div><div id="ph"></div></div></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div><h3>The split</h3>The <b>TV</b> carries everything shared — the map, the standings, the weather, the drama. Your <b>phone</b> carries only your next move. Neither needs a wall of text.</div>
+    <div><h3>The garage sale</h3>Tools aren't a menu — they're <b>bid on</b> at a garage sale (tab 3). One mower on the block: win it and mowing is <i>yours</i>. That's why you specialize.</div>
+    <div><h3>Read it like M.U.L.E.</h3>Mute every word and you can still play from the <b>map</b> and the <b>list of competitors</b>. Words are the exception, not the wallpaper.</div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const KIDS=[
+  {id:"you",name:"You",em:"🧒",color:"#2f9e5c",co:41},
+  {id:"chip",name:"Chip",em:"🦝",color:"#c6504a",co:53},
+  {id:"dot",name:"Dot",em:"🐹",color:"#2b8fd6",co:38},
+];
+const HOUSES=[
+  {x:14,y:24,cue:"🌿",hiring:true},
+  {x:41,y:17,cue:"🧸",hiring:true},
+  {x:70,y:26,cue:"🍂",hiring:false},
+  {x:24,y:66,cue:"🐕",hiring:true},
+  {x:57,y:74,cue:"🚗",hiring:false,done:true},
+  {x:84,y:60,cue:"🌿",hiring:true},
+];
+const CORNERS=[{x:36,y:46},{x:76,y:82}];
+const JOBCOLORS={mow:"var(--mow)",rake:"var(--rake)",sit:"var(--sit)",wash:"var(--wash)",dog:"var(--dog)",lem:"var(--lem)"};
+const money=n=>"$"+n;
+
+function boardMap(actorPos, spark){
+  const houses=HOUSES.map(h=>`<div class="h ${h.hiring?'hiring':''} ${h.done?'done':''}" style="left:${h.x}%;top:${h.y}%">
+      <div class="pin">🏠<span class="cue">${h.cue}</span></div></div>`).join("");
+  const corners=CORNERS.map(c=>`<div class="h corner" style="left:${c.x}%;top:${c.y}%"><div class="pin">🥤</div></div>`).join("");
+  const kids=KIDS.map((k,i)=>{ const pos=(actorPos&&actorPos[k.id])||[[14,24],[70,26],[57,74]][i];
+    return `<div class="kid" style="left:${pos[0]}%;top:${pos[1]}%;background:${k.color};color:#fff">${k.em}${k.id==='you'?'<span class="tag">YOU</span>':''}</div>`; }).join("");
+  const sp = spark?`<div class="spark" style="left:${spark[0]}%;top:${spark[1]}%">${spark[2]}</div>`:"";
+  return `<div class="map"><div class="road" style="left:0;right:0;top:44%;height:8px"></div><div class="road" style="top:0;bottom:0;left:33%;width:8px"></div>${houses}${corners}${kids}${sp}</div>`;
+}
+function leaderboard(){
+  const max=Math.max(...KIDS.map(k=>k.co));
+  const rows=KIDS.slice().sort((a,b)=>b.co-a.co).map(k=>`<div class="lpwrap">
+     <div class="lp"><span class="av" style="background:${k.color};color:#fff">${k.em}</span><span class="nm">${k.name}</span><span class="co">${money(k.co)}</span></div>
+     <div class="bar"><i style="width:${k.co/max*100}%;background:${k.color}"></i></div></div>`).join("");
+  return `<div class="lead"><div class="lh">On the block</div>${rows}</div>`;
+}
+
+const SCENES={
+  work:{ tab:"Work the block",
+    note:`<div><b>Everyone at once.</b> The TV shows the block, who's where, and what's hot today. Your phone asks one question — <b>where to?</b> — with your closest options. That's the whole interface.</div>`,
+    tv:()=>`<div class="board">
+      <div class="top"><div class="phase"><small>Day 3 · morning</small>Pick a job</div>
+        <div class="wx">☀️ Sunny · <span class="hot">🌱🐕 ×2</span></div></div>
+      <div class="body">${boardMap()} ${leaderboard()}</div></div>`,
+    ph:()=>`<div class="cock">
+      <div class="me"><span class="av">🧒</span><span class="tools">🛒</span><span class="co">$41</span></div>
+      <div><div class="lead2">Where to?</div><div class="big">Your move, kiddo.</div></div>
+      <div class="choice go"><span class="ce">🌿</span><span>Mow the Reyes'<br><span style="font-weight:600;color:var(--muted);font-size:12px">looks like a big lawn</span></span><span class="cs">2h</span></div>
+      <div class="choice"><span class="ce">🧸</span><span>Sit for the Kims</span><span class="cs">3h</span></div>
+      <div class="choice"><span class="ce">🥤</span><span>Run a stand</span><span class="cs">corner · 1h</span></div>
+      <div class="spacer"></div>
+      <div class="pbtn sub">Call it a day</div></div>` },
+
+  mow:{ tab:"The micro-game",
+    note:`<div><b>The tactile beat lives on the phone.</b> The TV just shows you at the Reyes' — the family watches; you focus on your hands. Tap when the mower hits the green for a neat stripe &amp; a tip.</div>`,
+    tv:()=>`<div class="board">
+      <div class="top"><div class="phase"><small>Day 3</small>🌱 You're mowing</div>
+        <div class="wx">the Reyes' · 🌿</div></div>
+      <div class="body">${boardMap({you:[14,24]},[14,24,"🌱"])} ${leaderboard()}</div></div>`,
+    ph:()=>`<div class="cock">
+      <div class="me"><span class="av">🧒</span><span class="tools" style="margin-left:auto"></span><span class="co">$41</span></div>
+      <div><div class="lead2">Mowing · the Reyes'</div><div class="big" style="color:var(--gold)">$6 <span style="color:var(--muted);font-weight:700;font-size:13px">+ $4 tips</span></div></div>
+      <div class="stripes"><i></i><i></i></div>
+      <div class="mow-track"><div class="mow-zone"></div><div class="mow-mk"></div></div>
+      <div style="font-size:12.5px;color:var(--muted);font-weight:700;text-align:center">Tap in the green ↑</div>
+      <div class="spacer"></div>
+      <div class="pbtn">🪒 Lay a stripe</div>
+      <div class="pbtn sub">Wrap up — take $10</div></div>` },
+
+  sale:{ tab:"Garage sale",
+    note:`<div><b>The new store — an auction.</b> A garage sale rolls onto the TV: one mower, one leaf blower, one wagon. Everyone bids from their phone. Win the mower and you <b>own</b> mowing on the block — <i>that's</i> why you'd get good at it.</div>`,
+    tv:()=>`<div class="board">
+      <div class="top"><div class="phase"><small>Saturday</small>🏷️ Garage sale!</div>
+        <div class="wx">going once…</div></div>
+      <div class="sale">
+        <div class="table">
+          <div class="items">
+            <div class="item up"><div class="ie">🌱</div><div class="inm">Push mower</div></div>
+            <div class="item"><div class="ie">🍃</div><div class="inm">Leaf blower</div></div>
+            <div class="item"><div class="ie">🛒</div><div class="inm">Wagon</div></div>
+            <div class="item"><div class="ie">🛻</div><div class="inm">Lemonade cart</div></div>
+          </div>
+          <div class="bidbig"><span class="amt">$7</span><span class="who" style="color:${KIDS[1].color}">🦝 Chip leads</span></div>
+          <div class="bidrow"><span class="bidchip" style="border-color:${KIDS[0].color};color:${KIDS[0].color}">You $6</span><span class="bidchip" style="border-color:${KIDS[2].color};color:${KIDS[2].color}">Dot out</span></div>
+        </div>
+        ${leaderboard()}
+      </div></div>`,
+    ph:()=>`<div class="cock">
+      <div class="me"><span class="av">🧒</span><span class="co">$41</span></div>
+      <div class="lookup">👀 Look up — Garage sale!</div>
+      <div><div class="lead2">Up now</div><div class="big">🌱 Push mower</div>
+        <div style="font-size:13px;color:var(--muted);font-weight:700;margin-top:2px">High bid <b style="color:var(--gold)">$7</b> · Chip</div></div>
+      <div style="font-size:12px;color:var(--muted);font-weight:600">Win it and rake in every lawn on the block.</div>
+      <div class="spacer"></div>
+      <div class="pbtn">Bid $8</div>
+      <div class="pbtn sub">Let it go</div></div>` },
+
+  payday:{ tab:"Payday",
+    note:`<div><b>The end-of-day reveal — a TV moment.</b> One glance shows who won the day and from what: each kid's earnings, colored by the kind of work. Your phone just says how you did and "ready."</div>`,
+    tv:()=>{ const data={you:{mow:10,lem:6},chip:{wash:12,sit:9,dog:4},dot:{rake:7,sit:6}};
+      const tot=o=>Object.values(o).reduce((a,b)=>a+b,0); const max=Math.max(...KIDS.map(k=>tot(data[k.id])));
+      const rows=KIDS.slice().sort((a,b)=>tot(data[b.id])-tot(data[a.id])).map((k,i)=>{
+        const segs=Object.entries(data[k.id]).map(([j,v])=>`<span class="seg" style="width:${v/max*100}%;background:${JOBCOLORS[j]}"></span>`).join("");
+        return `<div class="erow"><span class="who"><span class="av" style="width:20px;height:20px;background:${k.color};color:#fff;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;border:2px solid #fff">${k.em}</span>${k.name}${i===0?' 🏆':''}</span><span class="track">${segs}</span><span class="tot">${money(tot(data[k.id]))}</span></div>`; }).join("");
+      const sw=[["mow","Mow"],["rake","Rake"],["sit","Sit"],["wash","Wash"],["dog","Dog"],["lem","Stand"]].map(([j,n])=>`<span class="s"><span class="sw" style="background:${JOBCOLORS[j]}"></span>${n}</span>`).join("");
+      return `<div class="board"><div class="top"><div class="phase"><small>Sundown</small>End of Day 3</div><div class="wx">🙂 Block: friendly</div></div>
+        <div class="reveal">${rows}<div class="swk">${sw}</div></div></div>`; },
+    ph:()=>`<div class="cock" style="justify-content:center;text-align:center;gap:16px">
+      <div style="font-size:40px">🥈</div>
+      <div><div class="lead2">Your day</div><div class="big" style="font-size:24px;color:var(--gold)">$16</div><div style="font-size:13px;color:var(--muted);font-weight:700">2nd today · mowing + your stand</div></div>
+      <div style="font-size:12.5px;color:var(--muted)">Chip's ahead by $12. Tomorrow looks rainy 🌧️ — babysitting weather.</div>
+      <div class="spacer" style="flex:none;height:6px"></div>
+      <div class="pbtn">Ready for Day 4</div></div>` },
+};
+
+const ORDER=["work","mow","sale","payday"];
+let sel="work";
+function render(){
+  const tabs=document.getElementById("tabs");
+  tabs.innerHTML=ORDER.map((k,i)=>`<button class="tab" role="tab" aria-selected="${k===sel}" data-k="${k}"><span class="n">${i+1}</span>${SCENES[k].tab}</button>`).join("");
+  document.getElementById("note").innerHTML="✎ "+SCENES[sel].note;
+  document.getElementById("tv").innerHTML=SCENES[sel].tv();
+  document.getElementById("ph").innerHTML=SCENES[sel].ph();
+}
+document.addEventListener("click",e=>{ const t=e.target.closest(".tab"); if(!t)return; sel=t.dataset.k; render();
+  document.querySelector(".stage").scrollIntoView({behavior:"smooth",block:"nearest"}); });
+render();
+</script>
