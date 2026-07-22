@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Block</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8F%98%EF%B8%8F</text></svg>">
+<style>
+  :root{ --ground:#eef3ec; --panel:#fbfdf9; --panel-2:#eef4ea; --line:#d3ddca; --ink:#1e2b1c; --muted:#5b6b53; --faint:#93a389;
+    --accent:#2f9e5c; --sky:#2b8fd6; --gold:#c9971e; --bad:#c6504a; --good:#2f9e5c; --warn:#c9871e; --plum:#8a5cc9;
+    --lawn:#bfe6c6; --road:#c4cec6; --roadline:rgba(255,255,255,.5); --park:#a9dcb0; --roof:#b6725a; --roofV:#8b96a0;
+    --c-mow:#5aa02c; --c-rake:#c98a2c; --c-sit:#c65a8a; --c-wash:#2b8fd6; --c-dog:#8a6cc9; --c-lem:#d0b02c;
+    --shadow:0 1px 0 rgba(0,0,0,.03),0 8px 22px rgba(30,50,20,.08); --mono:ui-monospace,Menlo,Consolas,monospace; --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  @media (prefers-color-scheme:dark){ :root{ --ground:#0d1510; --panel:#142016; --panel-2:#182a1c; --line:#2a3d2c; --ink:#dcecd6; --muted:#8ba283; --faint:#5d7358;
+    --accent:#5cc47f; --sky:#5cb4e6; --gold:#e5c264; --bad:#e0736b; --good:#5cc47f; --warn:#e0b055; --plum:#a98ce0;
+    --lawn:#1c3327; --road:#2b3a31; --roadline:rgba(255,255,255,.28); --park:#22402c; --roof:#8a4f3d; --roofV:#556069;
+    --c-mow:#7bbf4d; --c-rake:#e0a458; --c-sit:#e07ba8; --c-wash:#5cb4e6; --c-dog:#a98ce0; --c-lem:#e5cf5c; --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4);} }
+  :root[data-theme="light"]{ --ground:#eef3ec; --panel:#fbfdf9; --panel-2:#eef4ea; --line:#d3ddca; --ink:#1e2b1c; --muted:#5b6b53; --faint:#93a389; --accent:#2f9e5c; --sky:#2b8fd6; --gold:#c9971e; --bad:#c6504a; --good:#2f9e5c; --warn:#c9871e; --plum:#8a5cc9; --lawn:#bfe6c6; --road:#c4cec6; --roadline:rgba(255,255,255,.5); --park:#a9dcb0; --roof:#b6725a; --roofV:#8b96a0; --c-mow:#5aa02c; --c-rake:#c98a2c; --c-sit:#c65a8a; --c-wash:#2b8fd6; --c-dog:#8a6cc9; --c-lem:#d0b02c;}
+  :root[data-theme="dark"]{ --ground:#0d1510; --panel:#142016; --panel-2:#182a1c; --line:#2a3d2c; --ink:#dcecd6; --muted:#8ba283; --faint:#5d7358; --accent:#5cc47f; --sky:#5cb4e6; --gold:#e5c264; --bad:#e0736b; --good:#5cc47f; --warn:#e0b055; --plum:#a98ce0; --lawn:#1c3327; --road:#2b3a31; --roadline:rgba(255,255,255,.28); --park:#22402c; --roof:#8a4f3d; --roofV:#556069; --c-mow:#7bbf4d; --c-rake:#e0a458; --c-sit:#e07ba8; --c-wash:#5cb4e6; --c-dog:#a98ce0; --c-lem:#e5cf5c;}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.45;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+  .wrap{max-width:520px;margin:0 auto;padding:14px 14px 40px}
+  .mast{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:10px;flex-wrap:wrap}
+  .title{font-size:19px;font-weight:850}.title .b{color:var(--accent)}
+  .vtag{font-size:11px;color:#fff;background:var(--accent);font-weight:800;padding:1px 8px;border-radius:20px;margin-left:4px}
+  .sub{font-size:12px;color:var(--muted)}
+  button{font-family:inherit;cursor:pointer} button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px;margin-bottom:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:9px 11px;box-shadow:var(--shadow)}
+  .label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .card .big{font-size:20px;font-weight:800;font-family:var(--mono)}
+  .wx{display:flex;align-items:center;gap:7px;margin-top:1px}.wx .em{font-size:20px}.wx .nm{font-weight:800;font-size:14px}
+  .boosts{margin-top:4px;font-size:12px;color:var(--gold);font-weight:700}
+  .mood{font-size:15px;font-weight:800;margin-top:1px}
+  .gwbar,.dlbar{height:9px;background:var(--panel-2);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+  .gwfill{height:100%;background:var(--good)}.gwfill.warn{background:var(--warn)}.gwfill.bad{background:var(--bad)}
+  .dlfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--sky))}
+  .stand{display:flex;flex-direction:column;gap:4px;margin-top:1px}.stand .p{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px}
+  .chip{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:6px}.cash{font-family:var(--mono);font-weight:800}
+  .stagewrap{position:relative;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line);background:var(--road)}
+  canvas{display:block;width:100%;height:auto;touch-action:none}
+  .overlay{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;gap:11px;padding:18px;background:color-mix(in srgb,var(--ink) 6%,var(--panel));overflow-y:auto;z-index:3}
+  .overlay.show{display:flex}
+  .overlay h2{margin:0;font-size:17px;font-weight:850;text-wrap:balance}.overlay h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:8px 0 4px}
+  .ohint{color:var(--muted);font-size:13px}
+  .pay{display:flex;align-items:baseline;gap:10px}.pay .big{font-size:28px;font-weight:800;font-family:var(--mono);color:var(--gold)}.pay .brk{font-size:12.5px;color:var(--muted)}
+  .reveal{font-size:15px;font-weight:700;min-height:22px;display:flex;align-items:center;gap:7px}.reveal.big{color:var(--gold)}.reveal.bad{color:var(--bad)}
+  .clock{display:flex;gap:8px;align-items:center;font-family:var(--mono);font-weight:700;font-size:13px}
+  .btnrow{display:flex;gap:9px;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink);padding:11px 17px;border-radius:10px;font-size:14px;font-weight:750}
+  .btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);border-color:var(--accent);color:#03210f}.btn:disabled{opacity:.4;cursor:not-allowed}
+  .banner{padding:9px 12px;border-radius:9px;font-size:13px}
+  .banner.good{background:color-mix(in srgb,var(--good) 15%,transparent);border:1px solid var(--good)}
+  .banner.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);border:1px solid var(--bad)}
+  .banner.gold{background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px solid var(--gold)}
+  .mowtrack{position:relative;height:44px;background:repeating-linear-gradient(90deg,var(--panel-2),var(--panel-2) 10px,color-mix(in srgb,var(--c-mow) 8%,var(--panel-2)) 10px,color-mix(in srgb,var(--c-mow) 8%,var(--panel-2)) 20px);border:1px solid var(--line);border-radius:10px;overflow:hidden;user-select:none}
+  .mowzone{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--c-mow) 34%,transparent);border-left:2px solid var(--c-mow);border-right:2px solid var(--c-mow)}
+  .mowmk{position:absolute;top:-2px;bottom:-2px;width:6px;background:var(--ink);border-radius:3px}
+  .mowstripes{display:flex;gap:4px;min-height:9px}.mowstripes .st{width:15px;height:9px;border-radius:2px;background:var(--c-mow)}
+  .erow{display:flex;align-items:center;gap:9px;margin:5px 0}.erow .who{width:64px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:5px}
+  .erow .track{flex:1;height:18px;border-radius:6px;background:var(--panel-2);overflow:hidden;display:flex}.erow .seg{height:100%}.erow .tot{width:44px;text-align:right;font-family:var(--mono);font-weight:800}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:4px}.swatches .s{display:inline-flex;align-items:center;gap:4px}.swatches .sw{width:9px;height:9px;border-radius:3px}
+  .lot{display:flex;gap:12px;flex-wrap:wrap}.lot .box{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:7px 11px;min-width:96px}.lot .box .n{font-family:var(--mono);font-weight:800;font-size:17px}.lot .box .l{font-size:10.5px;color:var(--muted)}
+  .caps{display:flex;flex-direction:column;gap:6px}.caprow{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.caprow .nm{width:96px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:5px}
+  .lvl{display:inline-flex;gap:3px}.lvl .d{width:11px;height:8px;border-radius:2px;background:var(--line)}.lvl .d.on{background:var(--accent)}.lvl .d.tool{background:var(--gold)}
+  .xpbar{flex:1;min-width:54px;max-width:120px;height:6px;border-radius:4px;background:var(--panel-2);overflow:hidden}.xpbar .f{height:100%;background:var(--accent);opacity:.6}
+  .lvup{font-size:10.5px;color:var(--gold);font-weight:800}
+  .toolbtn{border:1px solid var(--line);background:var(--panel-2);color:var(--ink);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:700}
+  .toolbtn:hover:not(:disabled){border-color:var(--accent)}.toolbtn:disabled{opacity:.5;cursor:not-allowed}.toolbtn.owned{color:var(--good);border-color:var(--good)}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:10px;line-height:1.5}.hint b{color:var(--ink)}
+  .barrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .log{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:9px 12px;box-shadow:var(--shadow)}
+  .log h3{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .log .feed{max-height:118px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+  .log .ln{font-size:12.5px;color:var(--muted)}.log .ln b{color:var(--ink)}.log .ln .g{color:var(--good)}.log .ln .gold{color:var(--gold);font-weight:700}.log .ln .r{color:var(--bad)}
+  .setup .field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  select{font-family:inherit;font-size:14px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel-2);color:var(--ink)}
+  .results .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}.results .row.win{color:var(--accent);font-weight:800}
+</style>
+
+<div class="wrap">
+  <div class="mast">
+    <div class="title">The <span class="b">Block</span><span class="vtag" id="vtag"></span></div>
+    <div class="sub" id="phaseTag">a summer on the block</div>
+  </div>
+  <div id="hud"></div>
+  <div class="stagewrap">
+    <canvas id="cv"></canvas>
+    <div class="overlay" id="ov"></div>
+  </div>
+  <div id="hint"></div>
+  <div id="logwrap"></div>
+</div>
+
+<script>
+"use strict";
+window.addEventListener("error",e=>{ const o=document.getElementById("ov"); if(o&&!o.dataset.crashed){o.dataset.crashed="1";o.className="overlay show";o.innerHTML='<h2>Something broke</h2><div class="ohint">'+((e&&e.message)||"error")+'</div>';} });
+
+/* ===== The Block — the haul-and-claim neighborhood woven into the full game ===== */
+const VERSION="0.8";
+const SVC={
+  mow:{name:"Mowing",cue:"🌿",tag:"lawn",verb:"mowed the lawn",em:"🌱",touches:["edge it crisp","bag the clippings","trim the border"]},
+  rake:{name:"Raking",cue:"🍂",tag:"leaves",verb:"raked the leaves",em:"🍂",touches:["bag them neat","clear the gutters","sweep the path"]},
+  sit:{name:"Babysitting",cue:"🧸",tag:"kids",verb:"babysat",em:"🧸",touches:["build a fort","bake with them","one more story"]},
+  wash:{name:"Car washing",cue:"🚗",tag:"a car",verb:"washed the car",em:"🧽",touches:["wax the hood","vacuum inside","shine the rims"]},
+  dog:{name:"Dog walking",cue:"🐕",tag:"a dog",verb:"walked the dog",em:"🐕",touches:["extra-long loop","teach a trick","brush it out"]},
+  lem:{name:"Lemonade help",cue:"🥤",tag:"a stand",verb:"ran the lemonade stand",em:"🥤",touches:["hand-letter a sign","upsell cookies","flag down cars"]},
+};
+const CAPS=["mow","rake","sit","wash","dog","lem"];
+const CAPMETA={
+  mow:{name:"Mowing",em:"🌱",color:"var(--c-mow)",tool:{name:"Push mower",em:"🌱",cost:6}},
+  rake:{name:"Raking",em:"🍂",color:"var(--c-rake)",tool:{name:"Leaf blower",em:"🍃",cost:6}},
+  sit:{name:"Babysitting",em:"🧸",color:"var(--c-sit)",tool:{name:"Sitter kit",em:"🎒",cost:6}},
+  wash:{name:"Car washing",em:"🧽",color:"var(--c-wash)",tool:{name:"Wash kit",em:"🪣",cost:6}},
+  dog:{name:"Dog walking",em:"🐕",color:"var(--c-dog)",tool:{name:"Leash & treats",em:"🦴",cost:6}},
+  lem:{name:"Lemonade",em:"🥤",color:"var(--c-lem)",tool:{name:"Lemonade cart",em:"🛻",cost:7}},
+};
+const WAGON={key:"wagon",name:"Wagon",em:"🛒",cost:9,desc:"Haul your gear faster — trips cost less daylight."};
+const WEATHER=[
+  {key:"heat",em:"🥵",text:"Heat wave — cars are dusty, lemonade sells itself.",boosts:["wash","lem"]},
+  {key:"sun",em:"☀️",text:"Sunny and mild — grass is growing, dogs need walking.",boosts:["mow","dog"]},
+  {key:"leaves",em:"🍂",text:"Leaves coming down all over the block.",boosts:["rake"]},
+  {key:"rain",em:"🌧️",text:"Rainy day — folks want a hand indoors.",boosts:["sit"]},
+  {key:"party",em:"🎉",text:"Block party weekend — everyone's out and about!",boosts:["sit","mow","dog","lem"]},
+];
+const QUIRK={none:{tag:"",basePay:0,tipMul:1,flub:0},rich:{tag:"big tippers",basePay:2,tipMul:1,flub:0},grumpy:{tag:"tight with tips",basePay:0,tipMul:0.5,flub:0},wild:{tag:"a real handful",basePay:1,tipMul:1,flub:0.15}};
+const FAMS=["Reyes","Okafor","Nguyen","Patel","Brooks","Ivanov","Cohen","Diaz","Murphy","Kim","Santos","Webb"];
+const CFG={startCash:5,daylight:12,jobTime:2,touchTime:1,tip:2,goodwill0:6,gwMax:10,soured:3,boostMult:2};
+const XPLVL=[0,2,4,7,11];
+
+/* ---- neighborhood grid (winding streets; content varies each game) ---- */
+const GW=6,GH=8;
+const ROAD_MAP=["..RR..","..R...","RRRRRR","R...R.","RRRRR.","...R..",".RRRRR",".R...."];
+const isRoad=(c,r)=> r>=0&&r<GH&&c>=0&&c<GW && ROAD_MAP[r][c]==="R";
+const N4=[[1,0],[-1,0],[0,1],[0,-1]];
+const HOME_CELLS=[[2,0],[5,2],[0,4],[3,5],[5,6],[1,7]];
+
+let STATE=null, cv,ctx,ov, W=0,H=0,dpr=1,cw=0,ch=0, raf=null,last=0, mgRAF=null;
+const rnd=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rnd(a.length)];
+const cash=n=>"$"+n;
+const V=(x,y)=>({x,y}); const sub=(a,b)=>V(a.x-b.x,a.y-b.y); const add=(a,b)=>V(a.x+b.x,a.y+b.y);
+const mul=(a,s)=>V(a.x*s,a.y*s); const vlen=a=>Math.hypot(a.x,a.y); const norm=a=>{const l=vlen(a)||1;return V(a.x/l,a.y/l)};
+const distp=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const dark=()=>matchMedia('(prefers-color-scheme: dark)').matches;
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const $=id=>document.getElementById(id);
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=rnd(i+1);const t=a[i];a[i]=a[j];a[j]=t;} return a; }
+function log(h){ STATE.log.unshift(h); if(STATE.log.length>40)STATE.log.pop(); }
+const cellC=(c,r)=>V((c+0.5)*cw,(r+0.5)*ch);
+const roadNbrs=(c,r)=>N4.map(([dx,dy])=>[c+dx,r+dy]).filter(([x,y])=>isRoad(x,y));
+function bfs(start,goal){ if(start[0]===goal[0]&&start[1]===goal[1])return[start];
+  const key=(c,r)=>r*GW+c, seen={[key(...start)]:null}, q=[start];
+  while(q.length){ const[c,r]=q.shift();
+    for(const[nc,nr]of roadNbrs(c,r)){ const k=key(nc,nr); if(k in seen)continue; seen[k]=[c,r];
+      if(nc===goal[0]&&nr===goal[1]){ const p=[[nc,nr]]; let pr=seen[k]; while(pr){p.unshift(pr);pr=seen[key(...pr)];} return p; }
+      q.push([nc,nr]); } } return [start]; }
+function spread(cells,n,minD){ const pool=shuffle(cells.slice()),out=[];
+  for(let m=minD;m>=0&&out.length<n;m--)for(const c of pool){ if(out.length>=n)break;
+    if(out.some(o=>o[0]===c[0]&&o[1]===c[1]))continue;
+    if(out.every(o=>Math.abs(o[0]-c[0])+Math.abs(o[1]-c[1])>=m))out.push(c); } return out; }
+
+/* ---- economy helpers ---- */
+const lvlOf=(id,cap)=>{ const xp=STATE.skill[id][cap]; let l=1; for(let i=1;i<XPLVL.length;i++)if(xp>=XPLVL[i])l=i+1; return l; };
+const hasTool=(id,cap)=>STATE.tool[id][cap];
+function gainXP(id,cap){ const b=lvlOf(id,cap); STATE.skill[id][cap]++; const a=lvlOf(id,cap);
+  if(a>b){ STATE.today.leveled[id].push(cap); if(id===0)log(`<div class="ln"><span class="gold">✦ You leveled up ${CAPMETA[cap].name} to Lv.${a}!</span></div>`); } }
+function svcPay(id,h){ let p=h.jobBase+QUIRK[h.quirk].basePay+(lvlOf(id,h.svc)-1)+(hasTool(id,h.svc)?2:0);
+  if(STATE.weather.boosts.includes(h.svc))p*=CFG.boostMult; if(STATE.goodwill>=8)p+=1; else if(STATE.goodwill<=CFG.soured)p=Math.max(1,p-1); return p; }
+function flubRisk(id,cap,quirk){ return Math.max(0.03,0.13+QUIRK[quirk].flub-0.03*(lvlOf(id,cap)-1)-(hasTool(id,cap)?0.04:0)); }
+function moodOf(gw){ if(gw<=CFG.soured)return{t:"Grumbling",c:"var(--bad)",f:"bad"}; if(gw>=8)return{t:"Loves you kids!",c:"var(--good)",f:""}; return{t:"Friendly",c:"var(--warn)",f:"warn"}; }
+const boostList=()=>STATE.weather.boosts.map(k=>SVC[k].cue).join(" ");
+
+/* ---- travel: street distance in daylight-hours ---- */
+function travelH(id,h){ const cells=bfs(STATE.acc[id],h.acc).length-1; let hrs=Math.max(1,Math.round(cells/2)); if(STATE.tool[id].wagon)hrs=Math.max(1,Math.round(hrs/2)); return hrs; }
+function canAfford(id,h){ return !h.done && travelH(id,h)+CFG.jobTime<=STATE.daylight[id]; }
+
+/* ---- new game / day ---- */
+function newGame(np,days){
+  const players=[{id:0,name:"You",human:true,color:cssv('--accent'),face:"🧒"}];
+  const roster=[{name:"Chip",pers:"greedy",color:cssv('--bad'),face:"🦝"},{name:"Dot",pers:"cautious",color:cssv('--sky'),face:"🐹"},{name:"Bax",pers:"chaos",color:cssv('--plum'),face:"🐰"}];
+  for(let i=0;i<np-1;i++){ const a=roster[i]; players.push({id:i+1,name:a.name,human:false,pers:a.pers,color:a.color,face:a.face}); }
+  const money={},skill={},tool={}; players.forEach(p=>{ money[p.id]=CFG.startCash; skill[p.id]={}; tool[p.id]={wagon:false}; CAPS.forEach(c=>{skill[p.id][c]=0;tool[p.id][c]=false;}); });
+  STATE={ day:1, maxDays:days, phase:"map", players, money, skill, tool, goodwill:CFG.goodwill0,
+    weather:null, nextWeather:pick(WEATHER), houses:[],vac:[],parks:[],roadCells:[], acc:{}, pos:{}, cart:{}, vel:{}, load:{},
+    daylight:{}, home:{}, work:null, mow:null, pay:null, night:null, today:null, log:[], notice:"", target:null, moved:false };
+  buildNeighborhood(); startDay();
+}
+function buildNeighborhood(){
+  STATE.roadCells=[]; for(let r=0;r<GH;r++)for(let c=0;c<GW;c++)if(isRoad(c,r))STATE.roadCells.push([c,r]);
+  const lots=[],inner=[]; for(let r=0;r<GH;r++)for(let c=0;c<GW;c++){ if(isRoad(c,r))continue; (roadNbrs(c,r).length?lots:inner).push([c,r]); }
+  const jobCells=spread(lots,6,2); const jk=new Set(jobCells.map(j=>j[0]+","+j[1]));
+  const rest=shuffle(lots.filter(l=>!jk.has(l[0]+","+l[1])));
+  STATE.vac=rest.slice(0,3).map(c=>({c:c[0],r:c[1]}));
+  STATE.parks=shuffle(inner.concat(rest.slice(3))).slice(0,3).map(c=>({c:c[0],r:c[1]}));
+  const svcs=shuffle(CAPS.slice()); const fams=FAMS.slice();
+  STATE.houses=jobCells.map((cell,i)=>{ const svc=svcs[i%svcs.length], acc=roadNbrs(cell[0],cell[1])[0];
+    return { id:i,c:cell[0],r:cell[1],svc, cue:SVC[svc].cue, fam:fams.splice(rnd(fams.length),1)[0]||("#"+i),
+      quirk:Math.random()<0.4?pick(["rich","grumpy","wild"]):"none", hot:false, need:false, jobBase:0, seen:false, done:false, by:null, acc }; });
+  // homes on the streets
+  const homes=shuffle(HOME_CELLS.slice());
+  STATE.players.forEach((p,i)=>{ STATE.home[p.id]=homes[i]; });
+}
+function startDay(){ const S=STATE;
+  S.weather=S.nextWeather||pick(WEATHER); S.nextWeather=pick(WEATHER);
+  S.players.forEach(p=>{ S.daylight[p.id]=CFG.daylight; const hc=S.home[p.id]; S.acc[p.id]=hc.slice(); });
+  // today's jobs: who's hiring, who's hot (weather-boosted → double pay & a safe bet)
+  S.houses.forEach(h=>{ h.done=false; h.by=null; h.seen=false; h.hot=S.weather.boosts.includes(h.svc);
+    const base=h.hot?0.9:0.55; h.need=Math.random()<base; h.jobBase=h.need?3+rnd(3):0; });
+  if(!S.houses.some(h=>h.need)) S.houses[0].need=true, S.houses[0].jobBase=4;  // never a dead day
+  // ledger for the reveal
+  const earned={},flubLost={},wasted={},leveled={};
+  S.players.forEach(p=>{ earned[p.id]={}; CAPS.forEach(c=>earned[p.id][c]=0); flubLost[p.id]=0; wasted[p.id]={count:0,hours:0}; leveled[p.id]=[]; });
+  S.today={earned,flubLost,wasted,leveled}; S.notice=""; S.target=null; S.moved=false; S.pay=null; S.work=null;
+  log(`<div class="ln"><b>— Day ${S.day} —</b> ${S.weather.em} ${S.weather.text}</div>`);
+  S.phase="map"; geometry(); placeKids(); render(); startMap();
+}
+function placeKids(){ const S=STATE; S.players.forEach(p=>{ const hc=S.home[p.id], c=cellC(hc[0],hc[1]);
+  S.pos[p.id]=V(c.x,c.y); S.cart[p.id]=V(c.x, c.y+(hc[1]>GH/2?-16:16)); S.vel[p.id]=V(0,0);
+  if(!S.load[p.id]) S.load[p.id]= p.human?2:1+rnd(3); }); }
+
+/* ---- canvas geometry ---- */
+function geometry(){ const S=STATE; S.solids=[];
+  for(const h of S.houses){ const ctr=cellC(h.c,h.r); h.center=ctr; const [dx,dy]=[h.acc[0]-h.c,h.acc[1]-h.r];
+    h.door=V(ctr.x+dx*cw*0.6, ctr.y+dy*ch*0.6); S.solids.push(bodyRect(h.c,h.r)); }
+  for(const v of S.vac) S.solids.push(bodyRect(v.c,v.r));
+  S.claimRP=0.7*Math.min(cw,ch); S.L=Math.max(20,Math.min(cw,ch)*0.42); }
+function bodyRect(c,r){ const ctr=cellC(c,r), bw=cw*0.56, bh=ch*0.42; return {x:ctr.x-bw/2,y:ctr.y-bh*0.3,w:bw,h:bh}; }
+function resize(){ const cssW=cv.clientWidth||490; dpr=Math.min(2,window.devicePixelRatio||1);
+  const cssH=Math.round(cssW*1.2); cv.width=cssW*dpr; cv.height=cssH*dpr; cv.style.height=cssH+"px"; ctx.setTransform(dpr,0,0,dpr,0,0);
+  const ow=W,oh=H; W=cssW; H=cssH; cw=W/GW; ch=H/GH;
+  if(STATE){ geometry(); if(ow&&oh)STATE.players.forEach(p=>{ const P=STATE.pos[p.id],C=STATE.cart[p.id]; if(P){P.x*=W/ow;P.y*=H/oh;} if(C){C.x*=W/ow;C.y*=H/oh;} }); if(STATE.phase!=="map")drawMap(); else drawMap(); } }
+
+/* ---- map loop (haul) ---- */
+function startMap(){ stopMap(); last=performance.now(); raf=requestAnimationFrame(mapLoop); }
+function stopMap(){ if(raf){cancelAnimationFrame(raf);raf=null;} }
+function mapLoop(now){ const dt=Math.min(0.033,(now-last)/1000); last=now; if(STATE&&STATE.phase==="map"){ mapUpdate(dt); drawMap(); raf=requestAnimationFrame(mapLoop); } }
+const onRoad=p=>isRoad(Math.floor(p.x/cw),Math.floor(p.y/ch));
+function collide(p,rad){ for(const s of STATE.solids){ const L=s.x-rad,R=s.x+s.w+rad,T=s.y-rad,B=s.y+s.h+rad;
+  if(p.x>L&&p.x<R&&p.y>T&&p.y<B){ const dl=p.x-L,dr=R-p.x,dt=p.y-T,db=B-p.y,m=Math.min(dl,dr,dt,db);
+    if(m===dl)p.x=L;else if(m===dr)p.x=R;else if(m===dt)p.y=T;else p.y=B; } } }
+function steerPlayer(dt){ const S=STATE, id=0, p=S.pos[id], cart=S.cart[id], v=S.vel[id];
+  const base=(onRoad(p)?200:132)/(1+0.15*(S.load[id]||0));
+  let desired=V(0,0); if(S.target){ const to=sub(S.target,p),dl=vlen(to); if(dl>4)desired=mul(norm(to),base); }
+  const backv=norm(sub(p,cart)); const head=norm((desired.x||desired.y)?desired:v);
+  const align=Math.max(0,backv.x*head.x+backv.y*head.y), pen=0.55+0.45*align;
+  const nv=add(mul(v,1-Math.min(1,9*dt)),mul(desired,Math.min(1,9*dt)*pen)); S.vel[id]=nv;
+  p.x+=nv.x*dt; p.y+=nv.y*dt; p.x=Math.max(10,Math.min(W-10,p.x)); p.y=Math.max(10,Math.min(H-10,p.y));
+  cartFollow(id,dt); collide(p,12); collide(cart,9);
+}
+function cartFollow(id,dt){ const S=STATE, p=S.pos[id], cart=S.cart[id]; if(!S._cv)S._cv={}; if(!S._cv[id])S._cv[id]=V(0,0);
+  let cvv=S._cv[id]; cart.x+=cvv.x*dt; cart.y+=cvv.y*dt; let to=sub(p,cart); const d=vlen(to);
+  if(d>S.L){ const pull=mul(norm(to),d-S.L); cart.x+=pull.x; cart.y+=pull.y; cvv.x=cvv.x*0.86+pull.x*5; cvv.y=cvv.y*0.86+pull.y*5; }
+  else { cvv.x*=0.86; cvv.y*=0.86; } }
+function mapUpdate(dt){ const S=STATE;
+  steerPlayer(dt);
+  // rivals glide toward their parked spot (they act between your trips)
+  for(let i=1;i<S.players.length;i++){ const id=S.players[i].id, tgt=S.rivGoal&&S.rivGoal[id]; if(!tgt)continue;
+    const p=S.pos[id]; p.x+=(tgt.x-p.x)*Math.min(1,6*dt); p.y+=(tgt.y-p.y)*Math.min(1,6*dt);
+    const cart=S.cart[id]; cart.x+=((p.x)-cart.x)*Math.min(1,5*dt); cart.y+=((p.y+14)-cart.y)*Math.min(1,5*dt); }
+  // arrival = knock
+  if(S.moved){ let best=null,bd=S.claimRP; for(const h of S.houses){ if(h.done)continue; const d=distp(S.pos[0],h.center); if(d<bd){bd=d;best=h;} }
+    if(best){ arrive(best); } }
+}
+function arrive(h){ const S=STATE;
+  if(!canAfford(0,h)){ if(S.notice!=="daylight"){ S.notice="daylight"; setHint(); } return; }
+  S.target=null; S.moved=false; stopMap(); knock(h);
+}
+
+/* ---- knock / work ---- */
+function knock(h){ const S=STATE; const t=travelH(0,h); S.daylight[0]-=t; S.acc[0]=h.acc.slice(); h.seen=true; h.done=true; h.by=0;
+  S.pos[0]=V(h.door.x,h.door.y);
+  if(!h.need){ S.today.wasted[0].count++; S.today.wasted[0].hours+=t;
+    log(`<div class="ln">You knocked at the ${h.fam}s' — <span class="r">no work today</span>.</div>`);
+    S.pay={bust:true,fam:h.fam,t}; S.phase="payday"; render(); return; }
+  const base=svcPay(0,h);
+  S.work={hid:h.id,fam:h.fam,svc:h.svc,quirk:h.quirk,base,tips:0,risk:flubRisk(0,h.svc,h.quirk),touches:0,flubbed:false,boosted:h.hot,reveal:""};
+  if(h.svc==="mow"){ startMow(); } else { S.phase="work"; render(); } }
+function work(action){ const S=STATE, Wk=S.work; if(!Wk)return;
+  if(action==="done"){ finishJob(); return; }
+  if(S.daylight[0]<CFG.touchTime){ finishJob(); return; }
+  S.daylight[0]-=CFG.touchTime; Wk.touches++;
+  if(Math.random()<Wk.risk){ Wk.reveal=flubText(Wk.svc)+" No tip this time."; S.today.flubLost[0]+=Wk.tips; Wk.tips=0; Wk.flubbed=true; finishJob(); return; }
+  const t=SVC[Wk.svc].touches, tip=Math.round(CFG.tip*QUIRK[Wk.quirk].tipMul); Wk.tips+=tip;
+  Wk.reveal=`You ${t[(Wk.touches-1)%t.length]} — +${cash(tip)} tip${QUIRK[Wk.quirk].tipMul<1?" (tight tippers)":""}`;
+  Wk.risk+=0.16; render(); }
+function flubText(svc){ return {mow:"You clipped the flowerbed! 🌷",rake:"The bag split! 💨",sit:"The toddler melted down! 😭",wash:"You left streaks! 😬",dog:"The dog slipped the leash! 🐕💨",lem:"You spilled the pitcher! 🥤"}[svc]||"Whoops!"; }
+function finishJob(){ const S=STATE, Wk=S.work; S.daylight[0]=Math.max(0,S.daylight[0]-CFG.jobTime);
+  const earned=Wk.flubbed?Wk.base:Wk.base+Wk.tips; S.money[0]+=earned; S.today.earned[0][Wk.svc]+=earned;
+  S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(Wk.flubbed?-1:1))); gainXP(0,Wk.svc);
+  S.pay={earned,base:Wk.base,tips:Wk.flubbed?0:Wk.tips,flubbed:Wk.flubbed,boosted:Wk.boosted,label:`${SVC[Wk.svc].name} · the ${Wk.fam}s'`};
+  log(`<div class="ln"><b style="color:var(--accent)">You</b> ${SVC[Wk.svc].verb} at the ${Wk.fam}s' — <span class="${Wk.flubbed?'r':'g'}">${cash(earned)}</span>${Wk.flubbed?" (flubbed the tip)":Wk.tips?` <span class="gold">(+${cash(Wk.tips)} tips)</span>`:""}.</div>`);
+  S.work=null; aiCatchUp(); S.phase="payday"; render(); }
+/* mowing micro-game */
+function startMow(){ const S=STATE; S.mow={pos:8,dir:1,speed:0.7,zStart:34,zW:30,stripes:0,reveal:""}; S.phase="mowgame"; render(); mgLoop(); }
+function mgLoop(){ const S=STATE; if(!S||S.phase!=="mowgame"){mgRAF=null;return;} const M=S.mow;
+  M.pos+=M.dir*M.speed; if(M.pos<=1){M.pos=1;M.dir=1;}else if(M.pos>=99){M.pos=99;M.dir=-1;}
+  const mk=$("mowmk"); if(mk)mk.style.left=M.pos+"%"; mgRAF=requestAnimationFrame(mgLoop); }
+function mgStop(){ if(mgRAF){cancelAnimationFrame(mgRAF);mgRAF=null;} }
+function mowStripe(){ const S=STATE,M=S.mow,Wk=S.work; if(!M||S.phase!=="mowgame")return;
+  if(S.daylight[0]<CFG.touchTime){ mgStop(); finishJob(); return; }
+  S.daylight[0]-=CFG.touchTime; const hit=M.pos>=M.zStart&&M.pos<=M.zStart+M.zW;
+  if(hit){ Wk.tips+=CFG.tip; M.stripes++; M.speed*=1.13; M.zW=Math.max(12,M.zW-3.5); M.zStart=8+rnd(Math.max(1,Math.round(84-M.zW))); M.reveal=`Neat stripe! +${cash(CFG.tip)} 🌱`; mgFace(); }
+  else { mgStop(); S.today.flubLost[0]+=Wk.tips; Wk.tips=0; Wk.flubbed=true; Wk.reveal="You veered into the flowerbed! 🌷"; finishJob(); } }
+function mowWrap(){ mgStop(); finishJob(); }
+function mgFace(){ const S=STATE,M=S.mow,Wk=S.work;
+  const z=$("mowzone"); if(z){z.style.left=M.zStart+"%";z.style.width=M.zW+"%";}
+  const t=$("mowtips"); if(t)t.textContent=cash(Wk.base+Wk.tips);
+  const r=$("mowrev"); if(r)r.textContent=M.reveal;
+  const st=$("mowstripes"); if(st)st.innerHTML=Array(M.stripes).fill('<span class="st"></span>').join("");
+  const dl=$("mowdl"); if(dl)dl.textContent=S.daylight[0];
+  const wb=$("mowwrap"); if(wb)wb.textContent=`Wrap up — take ${cash(Wk.base+Wk.tips)}`; }
+function paydayNext(){ const S=STATE; S.notice=""; if(humanCanAct()){ S.phase="map"; render(); startMap(); } else endDay(); }
+function humanCanAct(){ return STATE.houses.some(h=>canAfford(0,h)); }
+
+/* ---- rivals ---- */
+function estValue(id,h){ if(!h||h.done)return -9; let pay=4.5+QUIRK[h.quirk].basePay+(lvlOf(id,h.svc)-1)+(hasTool(id,h.svc)?2:0);
+  if(STATE.weather.boosts.includes(h.svc))pay*=CFG.boostMult; if(STATE.goodwill>=8)pay+=1; else if(STATE.goodwill<=CFG.soured)pay=Math.max(1,pay-1);
+  const chance=h.hot?0.9:0.55; return pay*chance - travelH(id,h)*1.2; }
+function aiPick(id){ const opts=STATE.houses.filter(h=>canAfford(id,h)); if(!opts.length)return null;
+  opts.sort((a,b)=>estValue(id,b)-estValue(id,a)); const r=Math.random(); const i=r<0.5?0:r<0.8?Math.min(1,opts.length-1):rnd(opts.length); return opts[i]; }
+function aiDo(p,h){ const S=STATE; const t=travelH(p.id,h); S.daylight[p.id]-=t; S.acc[p.id]=h.acc.slice(); h.done=true; h.by=p.id; h.seen=true;
+  if(!S.rivGoal)S.rivGoal={}; S.rivGoal[p.id]=V(h.door.x,h.door.y);
+  if(!h.need){ log(`<div class="ln"><b style="color:${p.color}">${p.name}</b> knocked at the ${h.fam}s' — <span class="r">no work</span>.</div>`); return; }
+  let base=svcPay(p.id,h),tips=0,risk=flubRisk(p.id,h.svc,h.quirk),flub=false;
+  const pushes=p.pers==="greedy"?3:p.pers==="cautious"?1:1+rnd(3);
+  for(let k=0;k<pushes;k++){ if(S.daylight[p.id]<CFG.touchTime)break; S.daylight[p.id]-=CFG.touchTime; if(Math.random()<risk){flub=true;break;} tips+=Math.round(CFG.tip*QUIRK[h.quirk].tipMul); risk+=0.16; }
+  S.daylight[p.id]=Math.max(0,S.daylight[p.id]-CFG.jobTime); const earned=flub?base:base+tips; S.money[p.id]+=earned; S.today.earned[p.id][h.svc]+=earned;
+  S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(flub?-1:1))); gainXP(p.id,h.svc);
+  log(`<div class="ln"><b style="color:${p.color}">${p.name}</b> ${SVC[h.svc].verb} at the ${h.fam}s' — <span class="${flub?'r':'g'}">${cash(earned)}</span>${flub?" (flub)":""}.</div>`); }
+function aiTurn(p){ const h=aiPick(p.id); if(!h)return false; aiDo(p,h); return true; }
+// keep rivals in step with YOU by daylight spent — fair, no bonus turns on a bust
+function aiCatchUp(){ const S=STATE; let g=0; while(g++<80){ let acted=false;
+  S.players.filter(p=>!p.human).forEach(p=>{ if(S.daylight[p.id]>S.daylight[0]&&aiTurn(p))acted=true; }); if(!acted)break; } }
+function endDay(){ const S=STATE; let g=0; while(g++<40){ let acted=false; S.players.filter(p=>!p.human).forEach(p=>{ if(aiTurn(p))acted=true; }); if(!acted)break; }
+  stopMap(); startStore(); }
+
+/* ---- garage sale (tools) ---- */
+function startStore(){ STATE.phase="store"; render(); }
+function buyTool(cap){ const S=STATE; const item=cap==="wagon"?WAGON:CAPMETA[cap].tool;
+  if(S.tool[0][cap]||S.money[0]<item.cost)return; S.money[0]-=item.cost; S.tool[0][cap]=true;
+  log(`<div class="ln"><b style="color:var(--accent)">You</b> grabbed a <span class="gold">${item.name}</span> ${item.em} at the sale.</div>`); render(); }
+function storeDone(){ const S=STATE, gw=S.goodwill; S.night={gw,soured:gw<=CFG.soured}; if(gw<=CFG.soured)log(`<div class="ln"><span class="r">⚠ The block's getting grumpy.</span></div>`); S.phase="evening"; render(); }
+function nextDay(){ const S=STATE; if(S.day>=S.maxDays){ endGame(); return; } S.day++; startDay(); }
+function endGame(){ const S=STATE; S.soured=S.goodwill<=CFG.soured; S.phase="over"; stopMap(); render(); }
+
+/* ================= drawing ================= */
+function rr(x,y,w,h,r){ ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath(); }
+function drawRoads(){ ctx.fillStyle=cssv('--road'); for(const[c,r]of STATE.roadCells)ctx.fillRect(c*cw,r*ch,cw+0.5,ch+0.5);
+  ctx.strokeStyle=cssv('--roadline');ctx.lineWidth=2;ctx.setLineDash([7,9]);
+  for(const[c,r]of STATE.roadCells){ const ctr=cellC(c,r);
+    if(isRoad(c+1,r)){ctx.beginPath();ctx.moveTo(ctr.x,ctr.y);ctx.lineTo(ctr.x+cw,ctr.y);ctx.stroke();}
+    if(isRoad(c,r+1)){ctx.beginPath();ctx.moveTo(ctr.x,ctr.y);ctx.lineTo(ctr.x,ctr.y+ch);ctx.stroke();} } ctx.setLineDash([]); }
+function drawHouse(h){ const ctr=h.center,b=bodyRect(h.c,h.r),claimed=h.done,who=claimed&&h.by!==null?STATE.players[h.by]:null;
+  ctx.fillStyle=cssv('--lawn'); rr(ctr.x-cw*0.42,ctr.y-ch*0.4,cw*0.84,ch*0.8,8); ctx.fill();
+  ctx.save(); if(h.hot&&!claimed){ctx.shadowColor=cssv('--gold');ctx.shadowBlur=15;}
+  ctx.fillStyle=cssv('--panel'); ctx.strokeStyle=claimed?(who?who.color:cssv('--line')):(h.hot?cssv('--gold'):cssv('--line')); ctx.lineWidth=claimed?3:(h.hot?2.5:1.4);
+  ctx.globalAlpha=claimed?0.5:1; rr(b.x,b.y,b.w,b.h,4);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(b.x-2,b.y);ctx.lineTo(b.x+b.w/2,b.y-ch*0.2);ctx.lineTo(b.x+b.w+2,b.y);ctx.closePath();
+  ctx.fillStyle=claimed&&who?who.color:cssv('--roof'); ctx.fill(); ctx.restore();
+  ctx.globalAlpha=1; ctx.textAlign="center"; ctx.textBaseline="middle";
+  if(claimed){ ctx.font="700 11px "+cssv('--sans'); ctx.fillStyle=who?who.color:cssv('--muted'); ctx.fillText(who?("● "+who.name):"done",ctr.x,ctr.y);
+  } else { ctx.font="19px serif"; ctx.fillText(h.cue,ctr.x,b.y-ch*0.02);
+    ctx.font="800 11px "+cssv('--sans'); ctx.fillStyle=h.hot?cssv('--gold'):cssv('--muted'); ctx.fillText(h.hot?"🔥 double":"job?",ctr.x,b.y+b.h+ch*0.15); } }
+function drawVac(v){ const ctr=cellC(v.c,v.r),b=bodyRect(v.c,v.r);
+  ctx.globalAlpha=0.6;ctx.fillStyle=cssv('--lawn'); rr(ctr.x-cw*0.42,ctr.y-ch*0.4,cw*0.84,ch*0.8,8);ctx.fill();ctx.globalAlpha=0.7;
+  ctx.fillStyle=cssv('--panel');ctx.strokeStyle=cssv('--line');ctx.lineWidth=1.4; rr(b.x,b.y,b.w,b.h,4);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(b.x-2,b.y);ctx.lineTo(b.x+b.w/2,b.y-ch*0.2);ctx.lineTo(b.x+b.w+2,b.y);ctx.closePath();ctx.fillStyle=cssv('--roofV');ctx.fill();
+  ctx.globalAlpha=1;ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="15px serif";ctx.fillText("🧳",ctr.x,ctr.y+ch*0.02); }
+function drawPark(p){ const ctr=cellC(p.c,p.r); ctx.fillStyle=cssv('--park'); rr(ctr.x-cw*0.44,ctr.y-ch*0.4,cw*0.88,ch*0.8,10);ctx.fill();
+  ctx.textAlign="center";ctx.textBaseline="middle";ctx.font="20px serif";ctx.fillText("🌳",ctr.x,ctr.y); }
+function drawKid(p){ const P=STATE.pos[p.id],C=STATE.cart[p.id];
+  ctx.strokeStyle=p.color;ctx.lineWidth=3;ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(C.x,C.y);ctx.stroke();ctx.globalAlpha=1;
+  ctx.fillStyle=cssv('--panel');ctx.strokeStyle=p.color;ctx.lineWidth=2; rr(C.x-12,C.y-10,24,20,6);ctx.fill();ctx.stroke();
+  ctx.font="13px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p.human?"🛒":"🧺",C.x,C.y);
+  for(let L=0;L<(STATE.load[p.id]||0);L++){ ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(C.x-7+L*7,C.y-13,2.4,0,7);ctx.fill(); }
+  ctx.beginPath();ctx.arc(P.x,P.y,13,0,7);ctx.fillStyle=p.color;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
+  ctx.font="15px serif";ctx.fillText(p.face,P.x,P.y+1); }
+function drawMap(){ if(!STATE||!cw)return;
+  ctx.fillStyle=dark()?"#0f1c14":"#d6e7d4"; ctx.fillRect(0,0,W,H);
+  drawRoads(); for(const p of STATE.parks)drawPark(p); for(const v of STATE.vac)drawVac(v); for(const h of STATE.houses)drawHouse(h);
+  const order=STATE.players.slice().sort((a,b)=>a.human?1:-1); for(const p of order)drawKid(p); }
+
+/* ================= DOM: hud + overlays ================= */
+function hud(){ const S=STATE,gw=S.goodwill,m=moodOf(gw),dl=S.daylight[0];
+  const stand=S.players.slice().sort((a,b)=>S.money[b.id]-S.money[a.id]).map(p=>`<div class="p"><span><span class="chip" style="background:${p.color}"></span>${p.name}</span><span class="cash">${cash(S.money[p.id])}</span></div>`).join("");
+  return `<div class="hud">
+    <div class="card"><div class="label">Day</div><div class="big">${S.day}<span style="color:var(--faint);font-size:14px"> / ${S.maxDays}</span></div>
+      <div class="label" style="margin-top:6px">Daylight</div><div class="dlbar"><div class="dlfill" style="width:${Math.max(0,dl)/CFG.daylight*100}%"></div></div><div style="font-size:10px;color:var(--faint);margin-top:2px">${Math.max(0,dl)}h left</div></div>
+    <div class="card"><div class="label">Today</div><div class="wx"><span class="em">${S.weather.em}</span><span class="nm">${S.weather.key[0].toUpperCase()+S.weather.key.slice(1)}</span></div><div class="boosts">${boostList()} 🔥×2</div></div>
+    <div class="card"><div class="label">The Block</div><div class="mood" style="color:${m.c}">${m.t}</div><div class="gwbar"><div class="gwfill ${m.f}" style="width:${gw/CFG.gwMax*100}%"></div></div></div>
+    <div class="card"><div class="label">Savings</div><div class="stand">${stand}</div></div></div>`; }
+function setHint(){ const S=STATE, el=$("hint"); if(!el)return;
+  if(S.phase!=="map"){ el.innerHTML=""; return; }
+  const note = S.notice==="daylight" ? `<div class="banner bad" style="margin-bottom:8px">Not enough daylight for that house — grab a closer one or call it a day.</div>` : "";
+  el.innerHTML = note + `<div class="hint">${S.weather.em} <b>${boostList()} pay double today.</b> <b>Haul your cart to a house</b> that looks like it's hiring — read the cue + weather. 🔥 houses are a safe bet and pay double; the others might not be hiring (a bust). Get there before the other kids claim it.</div>
+    <div class="barrow"><span class="hint" style="margin:0">☀️ ${Math.max(0,S.daylight[0])}h daylight left</span><button class="btn" data-act="go-home">Call it a day →</button></div>`; }
+function ovShow(html){ ov.className="overlay show"; ov.innerHTML=html; }
+function ovHide(){ ov.className="overlay"; ov.innerHTML=""; }
+function lvlDots(id,cap){ const l=lvlOf(id,cap),tool=hasTool(id,cap); let s=""; for(let i=0;i<5;i++){const on=i<l,gold=tool&&i===l&&l<5; s+=`<span class="d ${on?'on':''} ${gold?'tool':''}"></span>`;} return `<span class="lvl">${s}</span>`; }
+function xpFrac(id,cap){ const xp=STATE.skill[id][cap],l=lvlOf(id,cap); if(l>=5)return 1; const lo=XPLVL[l-1],hi=XPLVL[l]; return (xp-lo)/(hi-lo); }
+function capsGraph(id,hl){ return `<div class="caps">`+CAPS.map(cap=>{ const up=hl&&STATE.today.leveled[id].includes(cap),owned=hasTool(id,cap);
+  return `<div class="caprow"><span class="nm">${CAPMETA[cap].em} ${CAPMETA[cap].name}</span>${lvlDots(id,cap)}<span class="xpbar"><span class="f" style="width:${Math.round(xpFrac(id,cap)*100)}%"></span></span>${owned?`<span class="lvup">${CAPMETA[cap].tool.em}</span>`:""}${up?'<span class="lvup">▲ LEVEL UP!</span>':""}</div>`; }).join("")+`</div>`; }
+
+function ovWork(){ const S=STATE,Wk=S.work,sv=SVC[Wk.svc],dl=S.daylight[0],riskPct=Math.min(100,Math.round(Wk.risk*100)),hi=Wk.risk>=0.5,canT=dl>=CFG.touchTime;
+  const lv=lvlOf(0,Wk.svc),tool=hasTool(0,Wk.svc);
+  return `<h2>${sv.name} · the ${Wk.fam}s'${QUIRK[Wk.quirk].tag?` <span style="color:var(--faint);font-size:12px">(${QUIRK[Wk.quirk].tag})</span>`:""}</h2>
+    <div class="ohint">They hired you! Base pay <b>${cash(Wk.base)}</b>${Wk.boosted?' <span style="color:var(--gold)">(double — in demand!)</span>':""}${lv>1||tool?` <span style="color:var(--good)">(${lv>1?"Lv."+lv:""}${lv>1&&tool?" + ":""}${tool?"tool":""})</span>`:""}. Each touch adds a tip but costs <b>${CFG.touchTime}h</b> and risks a flub.</div>
+    <div class="reveal ${Wk.flubbed?'bad':Wk.tips>0?'big':''}">${Wk.reveal||"&nbsp;"}</div>
+    <div class="pay"><span class="big">${cash(Wk.base+Wk.tips)}</span><span class="brk">${cash(Wk.base)} job${Wk.tips?` + ${cash(Wk.tips)} tips`:""}</span></div>
+    <div class="clock">☀️ ${dl}h · flub <span style="color:${hi?'var(--bad)':'var(--warn)'}">${riskPct}%</span></div>
+    <div class="btnrow"><button class="btn primary" data-act="touch" ${canT?"":"disabled"}>✨ Add a touch (−${CFG.touchTime}h)</button><button class="btn" data-act="wrapup">Wrap up — ${cash(Wk.base+Wk.tips)}</button></div>`; }
+function ovMow(){ const S=STATE,Wk=S.work,M=S.mow,dl=S.daylight[0];
+  return `<h2>Mowing · the ${Wk.fam}s'${QUIRK[Wk.quirk].tag?` <span style="color:var(--faint);font-size:12px">(${QUIRK[Wk.quirk].tag})</span>`:""}</h2>
+    <div class="ohint">They hired you! Base <b>${cash(Wk.base)}</b>${Wk.boosted?' <span style="color:var(--gold)">(double!)</span>':""}. <b>Tap when the mower's in the green</b> to lay a neat stripe for a tip — it gets narrower and faster. Miss → the flowerbed (lose tips).</div>
+    <div class="pay"><span class="big" id="mowtips">${cash(Wk.base+Wk.tips)}</span><span class="brk">${cash(Wk.base)} job + tips</span></div>
+    <div class="mowtrack" data-act="mow-stripe"><div class="mowzone" id="mowzone" style="left:${M.zStart}%;width:${M.zW}%"></div><div class="mowmk" id="mowmk" style="left:${M.pos}%"></div></div>
+    <div class="mowstripes" id="mowstripes"></div>
+    <div class="reveal big" id="mowrev">${M.reveal||"&nbsp;"}</div>
+    <div class="clock">☀️ <span id="mowdl">${dl}</span>h · each stripe ${CFG.touchTime}h</div>
+    <div class="btnrow"><button class="btn primary" data-act="mow-stripe">🪒 Lay a stripe</button><button class="btn" id="mowwrap" data-act="mow-wrap">Wrap up — ${cash(Wk.base+Wk.tips)}</button></div>`; }
+function ovPayday(){ const S=STATE,P=S.pay,more=humanCanAct();
+  if(P.bust){ return `<h2>Nobody home for work 🤷</h2><div class="banner bad">The ${P.fam}s aren't hiring today — that haul cost you ${P.t}h of daylight.</div>
+    <div class="ohint">Read the cue + weather next time — 🔥 houses are the safe bets.</div>
+    <div class="btnrow"><button class="btn primary" data-act="payday-next">${more?"Back to the block →":"Head home — out of daylight →"}</button></div>`; }
+  return `<h2>${P.flubbed?"Ah well…":"Nice work! 🎉"}</h2>
+    ${P.flubbed?`<div class="banner bad">Flubbed the tip, but you still got paid.</div>`:`<div class="banner good">Neighbor's thrilled — the block likes you a little more.</div>`}
+    <div class="pay"><span class="big">${cash(P.earned)}</span><span class="brk">${P.label}${P.tips?` · +${cash(P.tips)} tips`:""}${P.boosted?" · great day for it!":""}</span></div>
+    <div class="ohint">☀️ ${Math.max(0,S.daylight[0])}h daylight left.</div>
+    <div class="btnrow"><button class="btn primary" data-act="payday-next">${more?"Back to the block →":"Head home — out of daylight →"}</button></div>`; }
+function ovStore(){ const S=STATE,c=S.money[0];
+  const rows=CAPS.map(cap=>{ const m=CAPMETA[cap],owned=hasTool(0,cap),afford=c>=m.tool.cost;
+    const btn=owned?`<button class="toolbtn owned" disabled>${m.tool.em} ${m.tool.name} ✓</button>`:`<button class="toolbtn" data-act="buytool" data-cap="${cap}" ${afford?"":"disabled"}>${m.tool.em} ${m.tool.name} · ${cash(m.tool.cost)}</button>`;
+    return `<div class="caprow"><span class="nm">${m.em} ${m.name}</span>${lvlDots(0,cap)}<span class="xpbar"><span class="f" style="width:${Math.round(xpFrac(0,cap)*100)}%"></span></span>${btn}</div>`; }).join("");
+  const wagon=S.tool[0].wagon?`<button class="toolbtn owned" disabled>${WAGON.em} ${WAGON.name} ✓</button>`:`<button class="toolbtn" data-act="buytool" data-cap="wagon" ${c>=WAGON.cost?"":"disabled"}>${WAGON.em} ${WAGON.name} · ${cash(WAGON.cost)}</button>`;
+  return `<h2>🏷️ Garage sale</h2>
+    <div class="ohint">You've got ${cash(c)}. Grab the <b style="color:var(--gold)">tools</b> that match what you're getting good at — each raises your pay and cuts flubs. (One of each on the block; first come, first served.)</div>
+    ${rows}
+    <div class="caprow" style="margin-top:8px"><span class="nm">🛒 Get around</span><span style="flex:1;font-size:12px;color:var(--muted)">${WAGON.desc}</span>${wagon}</div>
+    <div class="btnrow"><button class="btn primary" data-act="store-done">Home for the night →</button></div>`; }
+function earningsBars(){ const S=STATE; const tot=S.players.map(p=>({p,t:CAPS.reduce((n,c)=>n+S.today.earned[p.id][c],0)}));
+  const max=Math.max(1,...tot.map(x=>x.t)); const ranked=tot.slice().sort((a,b)=>b.t-a.t);
+  const rows=ranked.map(({p,t})=>{ const segs=CAPS.filter(c=>S.today.earned[p.id][c]>0).map(c=>`<span class="seg" style="width:${S.today.earned[p.id][c]/max*100}%;background:${CAPMETA[c].color}"></span>`).join("");
+    return `<div class="erow"><span class="who"><span class="chip" style="background:${p.color}"></span>${p.name}</span><span class="track" style="width:${Math.max(6,t/max*100)}%">${segs}</span><span class="tot">${cash(t)}</span></div>`; }).join("");
+  const sw=CAPS.map(c=>`<span class="s"><span class="sw" style="background:${CAPMETA[c].color}"></span>${CAPMETA[c].name}</span>`).join("");
+  return `<div>${rows}</div><div class="swatches">${sw}</div>`; }
+function ovEvening(){ const S=STATE,N=S.night,last=S.day>=S.maxDays,m=moodOf(N.gw);
+  const w=S.today.wasted[0],undone=S.houses.filter(h=>h.need&&h.by!==0&&!(h.done&&h.by!==null&&h.by!==0)).length,flub=S.today.flubLost[0];
+  const undone2=S.houses.filter(h=>h.need&&!h.done).length;
+  return `<h2>End of Day ${S.day} 🌙</h2>
+    ${N.soured?`<div class="banner bad">The neighbors are getting grumpy — a sour block at summer's end halves everyone's savings.</div>`:`<div class="banner good">The block is <b>${m.t.toLowerCase()}</b> tonight.</div>`}
+    <h3>Who earned what today</h3>${earningsBars()}
+    <h3>What you left on the table</h3>
+    <div class="lot"><div class="box"><div class="n">${cash(flub)}</div><div class="l">tips lost to flubs</div></div>
+      <div class="box"><div class="n">${w.count}</div><div class="l">busts (${w.hours}h walked)</div></div>
+      <div class="box"><div class="n">${undone2}</div><div class="l">jobs left on the block</div></div></div>
+    <h3>Your skills</h3>${capsGraph(0,true)}
+    <div class="ohint" style="margin-top:8px">Tomorrow: ${S.nextWeather.em} looks like ${S.nextWeather.key}.</div>
+    <div class="btnrow"><button class="btn primary" data-act="next-day">${last?"See how the summer went":"Next morning →"}</button></div>`; }
+function ovOver(){ const S=STATE,mult=S.soured?0.5:1,score={}; S.players.forEach(p=>score[p.id]=Math.floor(S.money[p.id]*mult));
+  const ranked=S.players.slice().sort((a,b)=>score[b.id]-score[a.id]),win=ranked[0];
+  const rows=ranked.map((p,i)=>`<div class="row ${i===0?'win':''}"><span><span class="chip" style="background:${p.color}"></span>${p.name}${i===0?" 🏆":""}</span><span class="cash">${cash(score[p.id])}</span></div>`).join("");
+  const best=CAPS.slice().sort((a,b)=>lvlOf(0,b)-lvlOf(0,a))[0];
+  return `<h2>End of summer</h2>
+    ${S.soured?`<div class="banner bad">The block soured on all the hustle — savings halved. Be a better neighbor next year. 🏘️</div>`:`<div class="banner good">A great summer on the block! 🌞</div>`}
+    <div class="results" style="margin:8px 0">${rows}</div>
+    <div class="ohint">${win.human?"You're the top kid on the block! 🏆":win.name+" out-hustled you — get 'em next year."} You became the block's best at <b>${CAPMETA[best].name}</b> ${CAPMETA[best].em} (Lv.${lvlOf(0,best)}).</div>
+    <div class="btnrow"><button class="btn primary" data-act="restart">Another summer</button></div>`; }
+function ovSetup(){ return `<h2>The Block 🏘️</h2>
+    <div class="ohint">A summer on the block. Haul your cart to a house that's hiring, do the work, get paid — then everyone hits the garage sale for tools. You get <b>better</b> at each job by doing it. Out-earn the other kids across the summer.</div>
+    <div class="setup">
+      <div class="field"><span class="label">Kids (you + rivals)</span><select id="np"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option></select></div>
+      <div class="field"><span class="label">Days of summer</span><select id="nd"><option>3</option><option selected>5</option><option>6</option></select></div>
+    </div>
+    <div class="btnrow" style="margin-top:6px"><button class="btn primary" data-act="start">☀️ Start the summer</button></div>
+    <div class="ohint" style="font-size:11.5px">The other kids: Chip (greedy hustler), Dot (steady), Bax (chaotic).</div>`; }
+
+function render(){ const S=STATE, tag=$("phaseTag");
+  if(!S){ $("hud").innerHTML=""; $("hint").innerHTML=""; $("logwrap").innerHTML=""; ovShow(ovSetup()); if(tag)tag.textContent="a summer on the block"; return; }
+  $("hud").innerHTML=hud();
+  const P=S.phase;
+  if(P==="map"){ ovHide(); setHint(); }
+  else { setHint(); if(P==="work")ovShow(ovWork()); else if(P==="mowgame")ovShow(ovMow()); else if(P==="payday")ovShow(ovPayday());
+    else if(P==="store")ovShow(ovStore()); else if(P==="evening")ovShow(ovEvening()); else if(P==="over")ovShow(ovOver()); }
+  if(P==="mowgame"){ mgFace(); }
+  $("logwrap").innerHTML = S.log.length?`<div class="log"><h3>Around the block</h3><div class="feed">${S.log.join("")}</div></div>`:"";
+  if(tag)tag.textContent=({map:"pick a job",work:"on the job",mowgame:"mowing",payday:"payday",store:"garage sale",evening:"end of day",over:"summer's over"})[P]||"the block";
+  if(P!=="map"&&P!=="setup") drawMap(); }
+
+/* ---- input ---- */
+function pt(e){ const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top); }
+function wire(){
+  cv.addEventListener("pointerdown",e=>{ if(STATE&&STATE.phase==="map"){ e.preventDefault(); STATE.target=pt(e); STATE.moved=true; STATE.notice=""; cv.setPointerCapture(e.pointerId); setHint(); } });
+  cv.addEventListener("pointermove",e=>{ if(STATE&&STATE.phase==="map"&&STATE.target) STATE.target=pt(e); });
+  cv.addEventListener("pointerup",()=>{ if(STATE)STATE.target=null; });
+  cv.addEventListener("pointercancel",()=>{ if(STATE)STATE.target=null; });
+  document.addEventListener("click",e=>{ const b=e.target.closest("[data-act]"); if(!b)return; const a=b.dataset.act;
+    if(a==="start") newGame(parseInt($("np").value),parseInt($("nd").value));
+    else if(a==="go-home") endDay();
+    else if(a==="touch") work("touch");
+    else if(a==="wrapup") work("done");
+    else if(a==="mow-stripe") mowStripe();
+    else if(a==="mow-wrap") mowWrap();
+    else if(a==="payday-next") paydayNext();
+    else if(a==="buytool") buyTool(b.dataset.cap);
+    else if(a==="store-done") storeDone();
+    else if(a==="next-day") nextDay();
+    else if(a==="restart"){ STATE=null; render(); } });
+  window.addEventListener("resize",resize);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(STATE&&cw)drawMap(); });
+}
+function boot(){ cv=$("cv"); ctx=cv.getContext("2d"); ov=$("ov"); $("vtag").textContent="v"+VERSION; wire();
+  const cssW=cv.clientWidth||490; W=cssW; H=Math.round(cssW*1.2); cw=W/GW; ch=H/GH; resize(); render(); }
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot); else boot();
+</script>
+</body>
+</html>

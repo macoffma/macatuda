@@ -1,9 +1,23 @@
 # Playable greyboxes
 
-Two self-contained, single-file prototypes of the same tuned engine, different
-skins. Open either in any browser (phone, iPad, laptop) — no build, no install.
+Self-contained, single-file prototypes. Open any in a browser (phone, iPad,
+laptop) — no build, no install.
 
-- **`the-block-greybox.html` — The Block (current direction, v0.4).** A
+- **`the-block.html` — The Block, integrated build (current, v0.8).** The real
+  loop, with the haul-and-claim woven in. The "drum up work" phase is now a
+  **canvas neighborhood** — winding streets, building graphics, parks and
+  vacation lots (unplayable) — and you **haul your cart to a house** to claim the
+  job (that *is* your knock). Travel spends daylight (street distance), so *which*
+  house you pick is still the strategic cost. Hiring → the work beat (mowing
+  micro-game / touch-for-tips) → payday; not hiring → a bust. Rivals take their
+  turns between yours and glide to their houses as jobs grey out. Day ends →
+  **garage sale** (tools) → **end-of-day reveal** (stacked earnings bars) →
+  end-of-summer scoring. Keeps the whole economy from the greybox (earned skills,
+  tools, weather-hot double-pay jobs, goodwill, fair AI). Deferred to a later
+  pass: the *live simultaneous* swarm, full auction bidding, lemonade-stand
+  corners. Built on the feel-test in **`the-block-haul-demo.html`** (v0.6 — the
+  standalone haul sandbox, kept for reference).
+- **`the-block-greybox.html` — The Block, pre-haul greybox (v0.4/0.7).** A
   neighborhood summer hustle on a **procedural map** — you *drum up* work, you
   don't pick it off a board. Key systems: **knock on doors** to prospect (read a
   house's cues — 🌿 lawn, 🧸 kids, 🐕 dog, 🍂 leaves, 🚗 car — plus the weather to
