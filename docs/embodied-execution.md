@@ -82,11 +82,18 @@ The button-pushing dissolves into a little bustling town everyone can watch.
 
 ## What I built to feel it
 
-A tiny playable **"Race to the Door"** — pump to beat a rival to the good house,
-coasting over the puddle so you don't wipe out. It's the M.U.L.E. land-grab,
-embodied: five seconds, one thumb, and suddenly *getting the job* is a moment
-instead of a tap. If that dash feels good, it's the template for turning every
-"tap a house" into a little ride.
+First try was a 1-D pedal race ("Race to the Door") — but a button you time isn't
+exciting, and it wasn't the point. The real idea is **hauling your loaded cart
+through the streets to the house before the others get there.**
+
+So: **"Haul to the Door"** — a top-down, **drag-to-steer** race. You pull a cart
+that has *weight and swing*: whip a corner and it fishtails and slows you, so the
+skill is taking smooth, wide lines, staying on the road (grass is slow), and
+dodging the 🐕 — all while a rival's cart converges on the same lawn. That's the
+M.U.L.E. "walk your mule to the plot" feeling, and it works fine on a phone: the
+whole thing is one thumb dragging. If *that* feels good, it's the template for
+turning every "tap a house" into a little haul — and on the TV, four carts
+weaving toward four doors at once is the show.
 
 ## Next
 
