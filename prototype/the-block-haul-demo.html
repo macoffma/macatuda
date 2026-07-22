@@ -53,7 +53,7 @@
 
 <script>
 "use strict";
-const VERSION="0.5";
+const VERSION="0.6";
 const cv=document.getElementById("cv"), ctx=cv.getContext("2d"), ov=document.getElementById("ov");
 let W=0,H=0,dpr=1,cw=0,ch=0,S=null,raf=null,last=0,goodGrabs=0,games=0;
 const $=id=>document.getElementById(id);
@@ -130,7 +130,8 @@ function geometry(){ // pixel geometry from the current cell size
     h.door=V(ctr.x+dx*cw*0.6, ctr.y+dy*ch*0.6);           // the door faces the street
     S.solids.push(bodyRect(h.c,h.r)); }
   for(const v of S.vac) S.solids.push(bodyRect(v.c,v.r));
-  S.claimR=0.5*Math.min(cw,ch);
+  S.claimR=0.5*Math.min(cw,ch);        // AI door-arrival radius
+  S.claimRP=0.7*Math.min(cw,ch);       // player: pull-into-the-yard radius (forgiving)
   S.L=Math.max(20,Math.min(cw,ch)*0.42);
 }
 function bodyRect(c,r){ const ctr=cellC(c,r), bw=cw*0.56, bh=ch*0.42; return {x:ctr.x-bw/2,y:ctr.y-bh*0.3,w:bw,h:bh}; }
@@ -180,10 +181,10 @@ function loop(now){ const dt=Math.min(0.033,(now-last)/1000); last=now; update(d
 function update(dt){
   S.clock=(S.clock||0)+dt; if(S.clock>22){ finish(S.houses.find(h=>h.by===0)||null); return; }
   const Y=S.kids[0]; steerKid(Y, S.target, dt);
-  // you claim the house you PULL UP TO — near its door AND nearly stopped (nearest door wins).
-  // so you can barrel past other houses at speed and only land the one you actually arrive at.
-  if(S.moved && len(Y.v)<55){ let best=null,bd=S.claimR*0.85;
-    for(const h of S.houses){ if(h.by!==null)continue; const d=dist(Y.p,h.door); if(d<bd){bd=d;best=h;} }
+  // you claim the house you HAUL UP TO — steer off the street into its yard and it's yours
+  // (nearest house wins). Driving down the street stays far from any house, so no accidents.
+  if(S.moved){ let best=null,bd=S.claimRP;
+    for(const h of S.houses){ if(h.by!==null)continue; const d=dist(Y.p,h.center); if(d<bd){bd=d;best=h;} }
     if(best){ best.by=0; finish(best); return; } }
   for(let i=1;i<S.kids.length;i++){ const k=S.kids[i];
     if(k.claimed) continue;
