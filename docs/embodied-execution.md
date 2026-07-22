@@ -86,14 +86,16 @@ First try was a 1-D pedal race ("Race to the Door") — but a button you time is
 exciting, and it wasn't the point. The real idea is **hauling your loaded cart
 through the streets to the house before the others get there.**
 
-So: **"Haul to the Door"** — a top-down, **drag-to-steer** race. You pull a cart
-that has *weight and swing*: whip a corner and it fishtails and slows you, so the
-skill is taking smooth, wide lines, staying on the road (grass is slow), and
-dodging the 🐕 — all while a rival's cart converges on the same lawn. That's the
-M.U.L.E. "walk your mule to the plot" feeling, and it works fine on a phone: the
-whole thing is one thumb dragging. If *that* feels good, it's the template for
-turning every "tap a house" into a little haul — and on the TV, four carts
-weaving toward four doors at once is the show.
+So: **"Grab a Job"** — a top-down, **drag-to-steer** *free-for-all* (not a 1v1
+race). The neighborhood is full of houses advertising jobs; the 🔥 hot ones pay
+double and everyone wants them. You pull a cart that has *weight and swing* (whip
+a corner and it fishtails and slows you), staying on the road (grass is slow), and
+haul to the job **you** want before a rival happens to claim it. Each kid grabs
+one job; the rivals are deliberately slower, so a hustling player reliably lands a
+good one — the tension is grabbing a *hot* house before it's taken, not beating a
+sprinter to a fixed door. That's the M.U.L.E. land-grab: a simultaneous scramble
+to claim what you want. And on the TV, four carts weaving toward six doors at once
+is the show.
 
 ## Next
 

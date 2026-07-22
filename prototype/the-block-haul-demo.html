@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Haul to the Door — The Block feel-test</title>
+<title>Grab a Job — The Block feel-test</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%9B%92</text></svg>">
 <style>
   :root{ --ground:#e9f0ec; --panel:#fbfdfb; --line:#cdd9d2; --ink:#1b2a24; --muted:#5a6f64;
-    --grass:#2f9e5c; --gold:#c9971e; --bad:#c6504a; --shadow:0 10px 28px rgba(20,45,30,.12);
-    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,Menlo,Consolas,monospace; }
-  @media (prefers-color-scheme:dark){ :root{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b; --shadow:0 14px 40px rgba(0,0,0,.5);} }
-  :root[data-theme="light"]{ --ground:#e9f0ec; --panel:#fbfdfb; --line:#cdd9d2; --ink:#1b2a24; --muted:#5a6f64; --grass:#2f9e5c; --gold:#c9971e; --bad:#c6504a;}
-  :root[data-theme="dark"]{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b;}
+    --grass:#2f9e5c; --gold:#c9971e; --bad:#c6504a; --sky:#2b8fd6; --plum:#8a5cc9;
+    --shadow:0 10px 28px rgba(20,45,30,.12); --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,Menlo,Consolas,monospace; }
+  @media (prefers-color-scheme:dark){ :root{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b; --sky:#5cb4e6; --plum:#a98ce0; --shadow:0 14px 40px rgba(0,0,0,.5);} }
+  :root[data-theme="light"]{ --ground:#e9f0ec; --panel:#fbfdfb; --line:#cdd9d2; --ink:#1b2a24; --muted:#5a6f64; --grass:#2f9e5c; --gold:#c9971e; --bad:#c6504a; --sky:#2b8fd6; --plum:#8a5cc9;}
+  :root[data-theme="dark"]{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b; --sky:#5cb4e6; --plum:#a98ce0;}
   *{box-sizing:border-box} html,body{margin:0;height:100%}
   body{background:var(--ground);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;overscroll-behavior:none;touch-action:none}
   .wrap{max-width:520px;margin:0 auto;padding:14px 14px 22px}
@@ -20,168 +20,144 @@
   .vtag{font-size:11px;color:#fff;background:var(--grass);font-weight:800;padding:1px 8px;border-radius:20px;margin-left:4px}
   .sub{font-size:12px;color:var(--muted)}
   .hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:13px;font-weight:700}
-  .cart-lbl{display:flex;align-items:center;gap:6px;color:var(--muted)} .cart-lbl b{color:var(--ink)}
-  .goalpill{display:flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--gold) 16%,var(--panel));border:1px solid var(--gold);border-radius:999px;padding:3px 10px;font-weight:800}
+  .hot{display:flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--gold) 16%,var(--panel));border:1px solid var(--gold);border-radius:999px;padding:3px 11px;font-weight:800}
+  .you{display:flex;align-items:center;gap:6px;color:var(--muted)} .you b{color:var(--grass)}
   .stagewrap{position:relative;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--line)}
   canvas{display:block;width:100%;height:auto;touch-action:none}
   .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px;background:color-mix(in srgb,var(--ink) 44%,transparent);backdrop-filter:blur(2px);z-index:3}
-  .overlay h2{margin:0;color:#fff;font-size:clamp(19px,5.5vw,26px);font-weight:900;text-wrap:balance}
-  .overlay p{margin:0;color:#eaf4ee;font-size:13.5px;max-width:32ch;line-height:1.5}
+  .overlay h2{margin:0;color:#fff;font-size:clamp(19px,5.5vw,25px);font-weight:900;text-wrap:balance}
+  .overlay p{margin:0;color:#eaf4ee;font-size:13.5px;max-width:33ch;line-height:1.5}
   .obtn{border:0;border-radius:14px;padding:13px 26px;font-size:16px;font-weight:900;background:var(--grass);color:#04210f;box-shadow:0 6px 16px rgba(0,0,0,.3)}
   .hint{text-align:center;color:var(--muted);font-size:12.5px;margin-top:11px;line-height:1.5}.hint b{color:var(--ink)}
 </style>
 
 <div class="wrap">
   <div class="mast">
-    <div class="title">Haul to the <span class="b">Door</span><span class="vtag" id="vtag"></span></div>
+    <div class="title">Grab a <span class="b">Job</span><span class="vtag" id="vtag"></span></div>
     <div class="sub">a feel-test for The Block</div>
   </div>
   <div class="hud">
-    <div class="cart-lbl">Your cart: <b>🌱🧰</b></div>
-    <div class="goalpill">🌿 the Reyes' · beat 🦝 Chip</div>
+    <div class="hot">🔥 Hot today: 🌿 🐕 🍋 · pay <b>double</b></div>
+    <div class="you">you: <b>🧒</b></div>
   </div>
   <div class="stagewrap">
     <canvas id="cv"></canvas>
     <div class="overlay" id="ov"></div>
   </div>
-  <div class="hint"><b>Drag anywhere to pull your cart.</b> It swings on turns — take smooth, wide lines. Stay on the road (grass is slow), dodge the 🐕. First cart to the lawn wins the job.</div>
+  <div class="hint"><b>Drag to haul your cart to any house</b> and claim that job. The 🔥 gold ones pay double — but the other kids want them too. Grab a good one before it's gone.</div>
 </div>
 
 <script>
 "use strict";
-const VERSION="0.1";
+const VERSION="0.2";
 const cv=document.getElementById("cv"), ctx=cv.getContext("2d"), ov=document.getElementById("ov");
-let W=0,H=0,dpr=1, S=null, raf=null, last=0, wins=0, games=0;
+let W=0,H=0,dpr=1,S=null,raf=null,last=0,goodGrabs=0,games=0;
 const $=id=>document.getElementById(id);
 const V=(x,y)=>({x,y}); const sub=(a,b)=>V(a.x-b.x,a.y-b.y); const add=(a,b)=>V(a.x+b.x,a.y+b.y);
-const mul=(a,s)=>V(a.x*s,a.y*s); const len=a=>Math.hypot(a.x,a.y);
-const norm=a=>{const l=len(a)||1;return V(a.x/l,a.y/l)};
+const mul=(a,s)=>V(a.x*s,a.y*s); const len=a=>Math.hypot(a.x,a.y); const norm=a=>{const l=len(a)||1;return V(a.x/l,a.y/l)};
+const dark=()=>matchMedia('(prefers-color-scheme: dark)').matches;
+function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-function resize(){ const cssW=cv.clientWidth; const cssH=Math.round(cssW*1.28);
+function resize(){ const cssW=cv.clientWidth; const cssH=Math.round(cssW*1.24);
   dpr=Math.min(2,window.devicePixelRatio||1); cv.width=cssW*dpr; cv.height=cssH*dpr; cv.style.height=cssH+"px";
   ctx.setTransform(dpr,0,0,dpr,0,0); W=cssW; H=cssH; if(S) layout(); }
-function layout(){
-  const w=W,h=H;
-  // road network (rectangles), in px
-  S.roads=[
-    {x:w*0.40,y:0,w:w*0.20,h:h},                 // main vertical
-    {x:0,y:h*0.30,w:w,h:w*0.16},                 // upper cross
-    {x:0,y:h*0.66,w:w,h:w*0.16},                 // lower cross
-  ];
-  S.houses=[
-    {x:w*0.50,y:h*0.10,em:"🏠",cue:"🌿",target:true},   // the Reyes' (goal)
-    {x:w*0.16,y:h*0.10,em:"🏠",cue:"🧸"},
-    {x:w*0.84,y:h*0.10,em:"🏠",cue:"🐕"},
-    {x:w*0.16,y:h*0.48,em:"🏠",cue:"🍂"},
-    {x:w*0.84,y:h*0.48,em:"🏠",cue:"🚗"},
-  ];
-  S.goal=S.houses[0];
-  if(!S.you){ S.you={p:V(w*0.50,h*0.94),v:V(0,0),cart:V(w*0.50,h*0.99),cv:V(0,0),spill:0}; }
-  if(!S.rival){ S.rival={p:V(w*0.86,h*0.90),cart:V(w*0.90,h*0.95),wp:0}; }
-  // rival waypoints: right side up to the top road, across to the goal
-  S.rpath=[ V(w*0.86,h*0.74), V(w*0.86,h*0.38), V(w*0.50,h*0.38), V(w*0.50,h*0.18) ];
-  S.dog={p:V(w*0.20,h*0.38),dir:1,base:h*0.38,minx:w*0.10,maxx:w*0.62,y:h*0.38};
-  S.L=Math.max(26,w*0.09); // cart rope length
+
+const HOTSET=["🌿","🐕","🍋"];
+function layout(){ const w=W,h=H;
+  S.roads=[{x:w*0.42,y:0,w:w*0.16,h:h},{x:0,y:h*0.32,w:w,h:w*0.14},{x:0,y:h*0.66,w:w,h:w*0.14}];
+  const SPOTS=[[0.14,0.15],[0.50,0.11],[0.86,0.15],[0.20,0.70],[0.80,0.70],[0.50,0.44]];
+  if(!S.houses){
+    const cues=["🌿","🧸","🐕","🍂","🚗","🍋"];
+    S.houses=SPOTS.map((s,i)=>{ const cue=cues[i]; const hot=HOTSET.includes(cue);
+      return {x:w*s[0],y:h*s[1],cue,hot,pay:hot?9:4,by:null}; });
+  } else S.houses.forEach((hh,i)=>{ hh.x=w*SPOTS[i][0]; hh.y=h*SPOTS[i][1]; });
+  if(!S.kids){
+    S.kids=[
+      {id:0,me:true,name:"You",color:cssv('--grass'),face:"🧒",p:V(w*0.50,h*0.95),cart:V(w*0.50,h*0.99),cv:V(0,0),v:V(0,0),spd:180},
+      {id:1,name:"Chip",color:cssv('--bad'),face:"🦝",p:V(w*0.08,h*0.90),cart:V(w*0.05,h*0.95),cv:V(0,0),spd:108,tgt:null,delay:0.5},
+      {id:2,name:"Dot",color:cssv('--sky'),face:"🐹",p:V(w*0.92,h*0.90),cart:V(w*0.96,h*0.95),cv:V(0,0),spd:100,tgt:null,delay:0.8},
+      {id:3,name:"Bax",color:cssv('--plum'),face:"🐰",p:V(w*0.92,h*0.30),cart:V(w*0.97,h*0.30),cv:V(0,0),spd:96,tgt:null,delay:1.1},
+    ];
+  } else S.kids.forEach(k=>{ /* keep */ });
+  S.L=Math.max(24,w*0.085); S.claimR=Math.max(30,w*0.11);
 }
-function reset(){ S={target:null,phase:"ready"}; layout();
-  ov.innerHTML=`<h2>Haul your gear to the 🌿 lawn — before Chip!</h2><p>Drag to pull your cart up the street. It swings behind you, so ease into the turns.</p><button class="obtn" id="go">Grab the cart & go</button>`;
+function reset(){ S={target:null,phase:"ready",houses:null,kids:null}; layout();
+  ov.innerHTML=`<h2>Grab a job before the other kids!</h2><p>Drag your cart to a house. 🔥 gold ones pay double — everyone's after those.</p><button class="obtn" id="go">Out you go!</button>`;
   ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault();start();}); draw();
 }
 function start(){ if(S.phase!=="ready")return; S.phase="run"; ov.style.display="none"; last=performance.now(); raf=requestAnimationFrame(loop); }
 function onRoad(p){ return S.roads.some(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h); }
-function houseHit(p,hs){ return Math.hypot(p.x-hs.x,p.y-hs.y-18)<30; }
+function nearestHouse(kid,preferHot){ let best=null,bd=1e9;
+  S.houses.forEach(hh=>{ if(hh.by!==null)return; let d=Math.hypot(kid.p.x-hh.x,kid.p.y-hh.y-16); if(preferHot&&!hh.hot)d+=260;
+    if(d<bd){bd=d;best=hh;} }); return best; }
 
-function loop(now){
-  const dt=Math.min(0.033,(now-last)/1000); last=now; update(dt); draw();
-  if(S.phase==="run") raf=requestAnimationFrame(loop);
+function loop(now){ const dt=Math.min(0.033,(now-last)/1000); last=now; update(dt); draw(); if(S.phase==="run") raf=requestAnimationFrame(loop); }
+function cartFollow(k){ let to=sub(k.p,k.cart),d=len(to); k.cart=add(k.cart,mul(k.cv,dt_)); to=sub(k.p,k.cart);d=len(to);
+  if(d>S.L){ const pull=mul(norm(to),d-S.L); k.cart=add(k.cart,pull); k.cv=add(mul(k.cv,0.86),mul(pull,5)); } else k.cv=mul(k.cv,0.86); }
+let dt_=0;
+function update(dt){ dt_=dt;
+  S.clock=(S.clock||0)+dt; if(S.clock>22){ finish(S.houses.find(h=>h.by===0)||null); return; }  // safety: don't dawdle all day
+  // player
+  const Y=S.kids[0]; let maxSpd=(onRoad(Y.p)?Y.spd:Y.spd*0.72);
+  let desired=V(0,0); if(S.target){ const to=sub(S.target,Y.p),dl=len(to); if(dl>4)desired=mul(norm(to),maxSpd); }
+  const back=norm(sub(Y.p,Y.cart)); const head=norm((desired.x||desired.y)?desired:Y.v);
+  const align=Math.max(0,back.x*head.x+back.y*head.y); const penalty=0.6+0.4*align; // easier handling
+  Y.v=add(mul(Y.v,1-Math.min(1,9*dt)),mul(desired,Math.min(1,9*dt)*penalty));
+  Y.p=add(Y.p,mul(Y.v,dt)); Y.p.x=Math.max(10,Math.min(W-10,Y.p.x)); Y.p.y=Math.max(10,Math.min(H-10,Y.p.y));
+  cartFollow(Y);
+  // player claim
+  for(const hh of S.houses){ if(hh.by===null && Math.hypot(Y.p.x-hh.x,Y.p.y-hh.y-16)<S.claimR){ hh.by=0; finish(hh); return; } }
+  // AIs
+  for(let i=1;i<S.kids.length;i++){ const k=S.kids[i];
+    if(k.claimed){ continue; }                 // each kid grabs ONE job, then parks
+    if(k.delay>0){ k.delay-=dt; continue; }
+    if(!k.tgt || k.tgt.by!==null) k.tgt=nearestHouse(k,true)||nearestHouse(k,false);
+    if(k.tgt){ const aim=V(k.tgt.x,k.tgt.y+16); const to=sub(aim,k.p),d=len(to);
+      if(d<S.claimR){ k.tgt.by=k.id; k.claimed=true; k.tgt=null; }
+      else { k.v=mul(norm(to),k.spd); k.p=add(k.p,mul(k.v,dt)); cartFollow(k); } }
+  }
+  // if every house claimed and player somehow didn't (safety) end
+  if(S.houses.every(hh=>hh.by!==null)){ const mine=S.houses.find(hh=>hh.by===0); finish(mine||null); }
 }
-function update(dt){
-  const Y=S.you;
-  // dog patrol
-  const d=S.dog; d.p.x+=d.dir*60*dt; if(d.p.x>d.maxx){d.p.x=d.maxx;d.dir=-1;} if(d.p.x<d.minx){d.p.x=d.minx;d.dir=1;}
-  // player steering toward drag target
-  let maxSpd = onRoad(Y.p)?168:104;
-  if(Y.spill>0){ Y.spill-=dt; maxSpd*=0.25; }
-  let desired=V(0,0);
-  if(S.target){ const to=sub(S.target,Y.p); const dl=len(to); if(dl>4) desired=mul(norm(to),maxSpd); }
-  // cart drag: if cart is off to the side of travel, you slow down (fishtail penalty)
-  const back=norm(sub(Y.p,Y.cart));               // from cart toward kid ~ travel dir when straight
-  const head=norm(desired.x||desired.y?desired:Y.v);
-  const align=Math.max(0, back.x*head.x+back.y*head.y);   // 1 = cart directly behind
-  const penalty=0.4+0.6*align;                    // sharp turns -> slow
-  Y.v=add(mul(Y.v,1-Math.min(1,8*dt)), mul(desired, Math.min(1,8*dt)*penalty));
-  Y.p=add(Y.p,mul(Y.v,dt));
-  Y.p.x=Math.max(10,Math.min(W-10,Y.p.x)); Y.p.y=Math.max(10,Math.min(H-10,Y.p.y));
-  // cart follows with rope constraint + inertia (the swing)
-  Y.cv=add(mul(Y.cv,0.86), V(0,0));
-  let toKid=sub(Y.p,Y.cart), dist=len(toKid);
-  Y.cart=add(Y.cart, mul(Y.cv,dt));
-  toKid=sub(Y.p,Y.cart); dist=len(toKid);
-  if(dist>S.L){ const pull=mul(norm(toKid),(dist-S.L)); Y.cart=add(Y.cart,pull); Y.cv=add(Y.cv,mul(pull,6)); }
-  // dog collision -> spill
-  if(Y.spill<=0 && (Math.hypot(Y.p.x-d.p.x,Y.p.y-d.p.y)<22 || Math.hypot(Y.cart.x-d.p.x,Y.cart.y-d.p.y)<20)){
-    Y.spill=0.9; Y.v=mul(Y.v,-0.2); }
-  // rival advances along its path
-  const R=S.rival, wp=S.rpath[R.wp];
-  if(wp){ const to=sub(wp,R.p); const dl=len(to); const step=112*dt;
-    if(dl<=step){ R.p=V(wp.x,wp.y); R.wp++; } else R.p=add(R.p,mul(norm(to),112*dt));
-    const tc=sub(R.p,R.cart); if(len(tc)>S.L*0.9) R.cart=add(R.cart,mul(norm(tc),len(tc)-S.L*0.9)); }
-  // win check
-  if(houseHit(Y.p,S.goal)) finish(true);
-  else if(R.wp>=S.rpath.length || houseHit(R.p,S.goal)) finish(false);
-}
-function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
-function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function rr(x,y,w,h,r){ ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath(); }
 function draw(){
-  const grass=cssv('--ground'), road="#8b978c", roadDark=cssv('--muted');
-  // grass
-  ctx.fillStyle = matchMedia('(prefers-color-scheme: dark)').matches? "#16241a":"#cfe3d2"; ctx.fillRect(0,0,W,H);
-  // roads
-  ctx.fillStyle = matchMedia('(prefers-color-scheme: dark)').matches? "#2c3a30":"#b9c6bd";
-  S.roads.forEach(r=>{ rr(r.x,r.y,r.w,r.h,10); ctx.fill(); });
-  // center dashes on main vertical
-  ctx.strokeStyle="rgba(255,255,255,.5)"; ctx.lineWidth=2; ctx.setLineDash([9,10]);
-  ctx.beginPath(); ctx.moveTo(W*0.5,0); ctx.lineTo(W*0.5,H); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle=dark()?"#16241a":"#cfe3d2"; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=dark()?"#2c3a30":"#b9c6bd"; S.roads.forEach(r=>{rr(r.x,r.y,r.w,r.h,10);ctx.fill();});
+  ctx.strokeStyle="rgba(255,255,255,.45)";ctx.lineWidth=2;ctx.setLineDash([9,10]);ctx.beginPath();ctx.moveTo(W*0.5,0);ctx.lineTo(W*0.5,H);ctx.stroke();ctx.setLineDash([]);
   // houses
-  S.houses.forEach(h=>{ const s=44;
-    ctx.fillStyle=cssv('--panel'); ctx.strokeStyle= h.target?cssv('--gold'):cssv('--line'); ctx.lineWidth=h.target?3:1.5;
-    if(h.target){ ctx.save(); ctx.shadowColor=cssv('--gold'); ctx.shadowBlur=16; }
-    rr(h.x-s/2,h.y,s,s,10); ctx.fill(); ctx.stroke(); if(h.target)ctx.restore();
-    ctx.font="24px serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(h.em,h.x,h.y+s/2-2);
-    ctx.font="14px serif"; ctx.fillText(h.cue,h.x,h.y+s+9); });
-  // dog
-  ctx.font="22px serif"; ctx.fillText("🐕",S.dog.p.x,S.dog.p.y);
-  // rival cart + kid
-  drawRig(S.rival.p,S.rival.cart,cssv('--bad'),"🦝","🧺");
-  // player cart + kid
-  drawRig(S.you.p,S.you.cart,cssv('--grass'),"🧒","🛒");
+  S.houses.forEach(h=>{ const s=46; const claimed=h.by!==null; const claimer=claimed?S.kids[h.by]:null;
+    ctx.save(); if(h.hot&&!claimed){ctx.shadowColor=cssv('--gold');ctx.shadowBlur=15;}
+    ctx.fillStyle=cssv('--panel'); ctx.strokeStyle=claimed?claimer.color:(h.hot?cssv('--gold'):cssv('--line')); ctx.lineWidth=claimed?3:(h.hot?3:1.5);
+    rr(h.x-s/2,h.y,s,s,10); ctx.globalAlpha=claimed?0.55:1; ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.globalAlpha=claimed?0.6:1;
+    ctx.font="24px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(claimed?"🏠":h.cue,h.x,h.y+s/2-1);
+    ctx.font="700 12px "+cssv('--sans'); ctx.fillStyle=claimed?claimer.color:(h.hot?cssv('--gold'):cssv('--muted'));
+    ctx.fillText(claimed?("● "+claimer.name):("$"+h.pay+(h.hot?" 🔥":"")), h.x, h.y+s+9);
+    ctx.globalAlpha=1; });
+  // kids
+  for(let i=S.kids.length-1;i>=0;i--){ const k=S.kids[i]; if(k.delay>0&&!k.me) {/*still draw at home*/}
+    // rope
+    ctx.strokeStyle=k.color;ctx.lineWidth=3;ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(k.p.x,k.p.y);ctx.lineTo(k.cart.x,k.cart.y);ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle=cssv('--panel');ctx.strokeStyle=k.color;ctx.lineWidth=2; rr(k.cart.x-12,k.cart.y-10,24,20,6);ctx.fill();ctx.stroke();
+    ctx.font="13px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(k.me?"🛒":"🧺",k.cart.x,k.cart.y);
+    ctx.beginPath();ctx.arc(k.p.x,k.p.y,13,0,7);ctx.fillStyle=k.color;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
+    ctx.font="15px serif";ctx.fillText(k.face,k.p.x,k.p.y+1); }
 }
-function drawRig(p,cart,color,face,cartEm){
-  // rope
-  ctx.strokeStyle=color; ctx.lineWidth=3; ctx.globalAlpha=.5; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(cart.x,cart.y); ctx.stroke(); ctx.globalAlpha=1;
-  // cart
-  ctx.fillStyle=cssv('--panel'); ctx.strokeStyle=color; ctx.lineWidth=2; rr(cart.x-13,cart.y-11,26,22,6); ctx.fill(); ctx.stroke();
-  ctx.font="15px serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(cartEm,cart.x,cart.y);
-  // kid
-  ctx.beginPath(); ctx.arc(p.x,p.y,13,0,7); ctx.fillStyle=color; ctx.fill(); ctx.lineWidth=2.5; ctx.strokeStyle="#fff"; ctx.stroke();
-  ctx.font="15px serif"; ctx.fillText(face,p.x,p.y+1);
-}
-function finish(youWin){
-  S.phase="done"; cancelAnimationFrame(raf); raf=null; games++; if(youWin)wins++;
-  ov.innerHTML=(youWin
-    ? `<h2>🌱 You made it first!</h2><p>Cart parked, gear ready — the Reyes' lawn is yours.</p>`
-    : `<h2>😤 Chip got there first!</h2><p>His cart beat you to the door. Take the turns smoother next time.</p>`)
-    + `<p style="opacity:.8">Won ${wins}/${games}.</p><button class="obtn" id="go">Race again</button>`;
+function finish(h){ S.phase="done"; cancelAnimationFrame(raf); raf=null; games++;
+  let head,body;
+  if(h&&h.hot){ goodGrabs++; head=`🔥 You grabbed a hot ${h.cue} job — $${h.pay}!`; body=`Beat the others to it. That's the good money today.`; }
+  else if(h){ head=`${h.cue} You got a $${h.pay} job.`; body=`The 🔥 gold jobs went fast — you took what was left. Hustle sooner next time.`; }
+  else { head=`😴 You dawdled — nothing left!`; body=`The other kids grabbed everything. Get moving next round.`; }
+  ov.innerHTML=`<h2>${head}</h2><p>${body}</p><p style="opacity:.8">Landed a hot job ${goodGrabs}/${games}.</p><button class="obtn" id="go">Go again</button>`;
   ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault(); reset(); start();});
 }
-// input: drag to set steer target
-function pt(e){ const r=cv.getBoundingClientRect(); return V((e.clientX-r.left),(e.clientY-r.top)); }
-cv.addEventListener("pointerdown",e=>{ e.preventDefault(); if(S&&S.phase==="run"){ S.target=pt(e); cv.setPointerCapture(e.pointerId); } });
+function pt(e){ const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top); }
+cv.addEventListener("pointerdown",e=>{ e.preventDefault(); if(S&&S.phase==="run"){ S.target=pt(e); cv.setPointerCapture(e.pointerId);} });
 cv.addEventListener("pointermove",e=>{ if(S&&S.target&&S.phase==="run") S.target=pt(e); });
-cv.addEventListener("pointerup",e=>{ if(S) S.target=null; });
+cv.addEventListener("pointerup",()=>{ if(S) S.target=null; });
 cv.addEventListener("pointercancel",()=>{ if(S) S.target=null; });
 window.addEventListener("resize",resize);
-matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',draw);
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(S)draw(); });
 function boot(){ $("vtag").textContent="v"+VERSION; resize(); reset(); }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot); else boot();
 </script>
