@@ -8,10 +8,12 @@
 <style>
   :root{ --ground:#e9f0ec; --panel:#fbfdfb; --line:#cdd9d2; --ink:#1b2a24; --muted:#5a6f64;
     --grass:#2f9e5c; --gold:#c9971e; --bad:#c6504a; --sky:#2b8fd6; --plum:#8a5cc9;
+    --lawn:#bfe6c6; --road:#c4cec6; --roadline:rgba(255,255,255,.5); --park:#a9dcb0; --roof:#b6725a; --roofV:#8b96a0;
     --shadow:0 10px 28px rgba(20,45,30,.12); --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,Menlo,Consolas,monospace; }
-  @media (prefers-color-scheme:dark){ :root{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b; --sky:#5cb4e6; --plum:#a98ce0; --shadow:0 14px 40px rgba(0,0,0,.5);} }
-  :root[data-theme="light"]{ --ground:#e9f0ec; --panel:#fbfdfb; --line:#cdd9d2; --ink:#1b2a24; --muted:#5a6f64; --grass:#2f9e5c; --gold:#c9971e; --bad:#c6504a; --sky:#2b8fd6; --plum:#8a5cc9;}
-  :root[data-theme="dark"]{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b; --sky:#5cb4e6; --plum:#a98ce0;}
+  @media (prefers-color-scheme:dark){ :root{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b; --sky:#5cb4e6; --plum:#a98ce0;
+    --lawn:#1c3327; --road:#2b3a31; --roadline:rgba(255,255,255,.28); --park:#22402c; --roof:#8a4f3d; --roofV:#556069; --shadow:0 14px 40px rgba(0,0,0,.5);} }
+  :root[data-theme="light"]{ --ground:#e9f0ec; --panel:#fbfdfb; --line:#cdd9d2; --ink:#1b2a24; --muted:#5a6f64; --grass:#2f9e5c; --gold:#c9971e; --bad:#c6504a; --sky:#2b8fd6; --plum:#8a5cc9; --lawn:#bfe6c6; --road:#c4cec6; --roadline:rgba(255,255,255,.5); --park:#a9dcb0; --roof:#b6725a; --roofV:#8b96a0;}
+  :root[data-theme="dark"]{ --ground:#0b1512; --panel:#122019; --line:#26372c; --ink:#dceee4; --muted:#84a091; --grass:#5cc47f; --gold:#e5c264; --bad:#e0736b; --sky:#5cb4e6; --plum:#a98ce0; --lawn:#1c3327; --road:#2b3a31; --roadline:rgba(255,255,255,.28); --park:#22402c; --roof:#8a4f3d; --roofV:#556069;}
   *{box-sizing:border-box} html,body{margin:0;height:100%}
   body{background:var(--ground);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%;overscroll-behavior:none;touch-action:none}
   .wrap{max-width:520px;margin:0 auto;padding:14px 14px 22px}
@@ -26,9 +28,10 @@
   canvas{display:block;width:100%;height:auto;touch-action:none}
   .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px;background:color-mix(in srgb,var(--ink) 44%,transparent);backdrop-filter:blur(2px);z-index:3}
   .overlay h2{margin:0;color:#fff;font-size:clamp(19px,5.5vw,25px);font-weight:900;text-wrap:balance}
-  .overlay p{margin:0;color:#eaf4ee;font-size:13.5px;max-width:33ch;line-height:1.5}
+  .overlay p{margin:0;color:#eaf4ee;font-size:13.5px;max-width:34ch;line-height:1.5}
   .obtn{border:0;border-radius:14px;padding:13px 26px;font-size:16px;font-weight:900;background:var(--grass);color:#04210f;box-shadow:0 6px 16px rgba(0,0,0,.3)}
   .hint{text-align:center;color:var(--muted);font-size:12.5px;margin-top:11px;line-height:1.5}.hint b{color:var(--ink)}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;color:var(--muted);font-size:11.5px;margin-top:7px}
 </style>
 
 <div class="wrap">
@@ -37,142 +40,232 @@
     <div class="sub">a feel-test for The Block</div>
   </div>
   <div class="hud">
-    <div class="hot">🔥 Hot today: 🌿 🐕 🍋 · pay <b>double</b></div>
+    <div class="hot" id="hotline">🔥 Hot today</div>
     <div class="you">you: <b>🧒</b></div>
   </div>
   <div class="stagewrap">
     <canvas id="cv"></canvas>
     <div class="overlay" id="ov"></div>
   </div>
-  <div class="hint"><b>Drag to haul your cart to any house</b> and claim that job. The 🔥 gold ones pay double — but the other kids want them too. Grab a good one before it's gone.</div>
+  <div class="hint"><b>Drag to haul your cart through the streets</b> to a house that's hiring, and claim that job. The 🔥 gold ones pay double — but the other kids want them too.</div>
+  <div class="legend"><span>🌳 park</span><span>🧳 away on vacation</span><span>— can't work these lots</span></div>
 </div>
 
 <script>
 "use strict";
-const VERSION="0.4";
+const VERSION="0.5";
 const cv=document.getElementById("cv"), ctx=cv.getContext("2d"), ov=document.getElementById("ov");
-let W=0,H=0,dpr=1,S=null,raf=null,last=0,goodGrabs=0,games=0;
+let W=0,H=0,dpr=1,cw=0,ch=0,S=null,raf=null,last=0,goodGrabs=0,games=0;
 const $=id=>document.getElementById(id);
 const V=(x,y)=>({x,y}); const sub=(a,b)=>V(a.x-b.x,a.y-b.y); const add=(a,b)=>V(a.x+b.x,a.y+b.y);
 const mul=(a,s)=>V(a.x*s,a.y*s); const len=a=>Math.hypot(a.x,a.y); const norm=a=>{const l=len(a)||1;return V(a.x/l,a.y/l)};
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const dark=()=>matchMedia('(prefers-color-scheme: dark)').matches;
 function cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=a[i];a[i]=a[j];a[j]=t;} return a; }
 
-function resize(){ const cssW=cv.clientWidth; const cssH=Math.round(cssW*1.24);
+/* ---- the neighborhood: a fixed winding street skeleton; content varies each game ---- */
+const GW=6, GH=8;
+const ROAD_MAP=["..RR..","..R...","RRRRRR","R...R.","RRRRR.","...R..",".RRRRR",".R...."];
+const isRoad=(c,r)=> r>=0&&r<GH&&c>=0&&c<GW && ROAD_MAP[r][c]==="R";
+const N4=[[1,0],[-1,0],[0,1],[0,-1]];
+const JOBS={"🌿":"lawn","🍂":"leaf","🧸":"babysitting","🐕":"dog-walking","🚗":"car-wash","🥤":"lemonade"};
+const HOME_CELLS=[[2,0],[5,2],[0,4],[3,5],[5,6],[1,7]];
+
+function cellC(c,r){ return V((c+0.5)*cw,(r+0.5)*ch); }
+function roadCellNeighbors(c,r){ return N4.map(([dx,dy])=>[c+dx,r+dy]).filter(([x,y])=>isRoad(x,y)); }
+function spread(cells,n,minD){ const pool=shuffle(cells.slice()), out=[];
+  for(let m=minD;m>=0 && out.length<n;m--){ for(const c of pool){ if(out.length>=n)break;
+    if(out.some(o=>o[0]===c[0]&&o[1]===c[1]))continue;
+    if(out.every(o=>Math.abs(o[0]-c[0])+Math.abs(o[1]-c[1])>=m)) out.push(c); } } return out; }
+function bfs(start,goal){ // road-cell path start->goal (inclusive)
+  if(start[0]===goal[0]&&start[1]===goal[1]) return [start];
+  const key=(c,r)=>r*GW+c, seen={[key(...start)]:null}, q=[start];
+  while(q.length){ const [c,r]=q.shift();
+    for(const [nc,nr] of roadCellNeighbors(c,r)){ const k=key(nc,nr); if(k in seen)continue; seen[k]=[c,r];
+      if(nc===goal[0]&&nr===goal[1]){ const path=[[nc,nr]]; let p=seen[k]; while(p){ path.unshift(p); p=seen[key(...p)]; } return path; }
+      q.push([nc,nr]); } }
+  return [start];
+}
+function nearestRoadCell(p){ let best=S.roadCells[0],bd=1e9; for(const rc of S.roadCells){ const d=dist(p,cellC(rc[0],rc[1])); if(d<bd){bd=d;best=rc;} } return best; }
+
+function buildMap(){
+  S.roadCells=[]; for(let r=0;r<GH;r++)for(let c=0;c<GW;c++) if(isRoad(c,r)) S.roadCells.push([c,r]);
+  // lots = non-road cells that touch a road (front onto a street)
+  const lots=[], inner=[];
+  for(let r=0;r<GH;r++)for(let c=0;c<GW;c++){ if(isRoad(c,r))continue;
+    (roadCellNeighbors(c,r).length?lots:inner).push([c,r]); }
+  const jobs=spread(lots,6,2);
+  const jkey=new Set(jobs.map(j=>j[0]+","+j[1]));
+  const restLots=shuffle(lots.filter(l=>!jkey.has(l[0]+","+l[1])));
+  const vac=restLots.slice(0,3);
+  const vkey=new Set(vac.map(v=>v[0]+","+v[1]));
+  const parkPool=shuffle(inner.concat(restLots.slice(3)));
+  const parks=parkPool.slice(0,3);
+  // jobs get one of each work type; 3 types are "hot today" (pay double)
+  const cues=shuffle(Object.keys(JOBS)).slice(0,6);
+  S.hotCues=shuffle(cues.slice()).slice(0,3);
+  S.houses=jobs.map((cell,i)=>{ const cue=cues[i], hot=S.hotCues.includes(cue);
+    // pick the road cell this house fronts onto (its access + door side)
+    const acc=roadCellNeighbors(cell[0],cell[1])[0];
+    return { c:cell[0], r:cell[1], cue, hot, pay:hot?9:4, by:null, acc };
+  });
+  S.vac=vac.map(c=>({c:c[0],r:c[1]}));
+  S.parks=parks.map(c=>({c:c[0],r:c[1]}));
+  // homes on the streets — everyone starts from a different corner
+  const homes=shuffle(HOME_CELLS.slice()).slice(0,4);
+  const defs=[
+    {id:0,me:true,name:"You",color:cssv('--grass'),face:"🧒",spd:200},
+    {id:1,name:"Chip",color:cssv('--bad'),face:"🦝",spd:174},
+    {id:2,name:"Dot",color:cssv('--sky'),face:"🐹",spd:170},
+    {id:3,name:"Bax",color:cssv('--plum'),face:"🐰",spd:166},
+  ];
+  S.kids=defs.map((d,i)=>({ ...d, home:homes[i], load:d.me?2:1+((Math.random()*3)|0),
+    noise:V(0,0), tgt:null, route:null, rp:0, claimed:false, delay:d.me?0:0.25+Math.random()*0.8 }));
+}
+function geometry(){ // pixel geometry from the current cell size
+  S.solids=[]; // buildings block movement
+  for(const h of S.houses){ const ctr=cellC(h.c,h.r); h.center=ctr;
+    const [dx,dy]=[h.acc[0]-h.c,h.acc[1]-h.r];
+    h.door=V(ctr.x+dx*cw*0.6, ctr.y+dy*ch*0.6);           // the door faces the street
+    S.solids.push(bodyRect(h.c,h.r)); }
+  for(const v of S.vac) S.solids.push(bodyRect(v.c,v.r));
+  S.claimR=0.5*Math.min(cw,ch);
+  S.L=Math.max(20,Math.min(cw,ch)*0.42);
+}
+function bodyRect(c,r){ const ctr=cellC(c,r), bw=cw*0.56, bh=ch*0.42; return {x:ctr.x-bw/2,y:ctr.y-bh*0.3,w:bw,h:bh}; }
+
+function resize(){ const cssW=cv.clientWidth; const cssH=Math.round(cssW*1.28);
   dpr=Math.min(2,window.devicePixelRatio||1); cv.width=cssW*dpr; cv.height=cssH*dpr; cv.style.height=cssH+"px";
-  ctx.setTransform(dpr,0,0,dpr,0,0); W=cssW; H=cssH; if(S) layout(); }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const ow=W,oh=H; W=cssW; H=cssH; cw=W/GW; ch=H/GH;
+  if(S){ geometry();
+    if(ow&&oh){ for(const k of S.kids){ if(k.p){k.p.x*=W/ow;k.p.y*=H/oh;} if(k.cart){k.cart.x*=W/ow;k.cart.y*=H/oh;} } }
+    draw(); }
+}
+function placeKids(){ for(const k of S.kids){ const p=cellC(k.home[0],k.home[1]);
+  k.p=V(p.x,p.y); k.cart=V(p.x, p.y+ (k.home[1]>GH/2?-16:16)); k.cv=V(0,0); k.v=V(0,0); } }
 
-const HOTSET=["🌿","🐕","🍋"];
-function layout(){ const w=W,h=H;
-  S.roads=[{x:w*0.42,y:0,w:w*0.16,h:h},{x:0,y:h*0.32,w:w,h:w*0.14},{x:0,y:h*0.66,w:w,h:w*0.14}];
-  // houses sit in the BLOCKS between the streets — never on the vertical main road (x .42–.58)
-  // or in the crossroad bands (y .32–.44, .66–.77) — so nothing ever blocks your driving lane.
-  const SPOTS=[[0.15,0.15],[0.85,0.15],[0.15,0.53],[0.85,0.53],[0.15,0.90],[0.85,0.90]];
-  if(!S.houses){
-    const cues=["🌿","🧸","🍂","🐕","🍋","🚗"];  // hot (🌿🐕🍋) spread to TL / MR / BL corners
-    S.houses=SPOTS.map((s,i)=>{ const cue=cues[i]; const hot=HOTSET.includes(cue);
-      return {x:w*s[0],y:h*s[1],cue,hot,pay:hot?9:4,by:null}; });
-  } else S.houses.forEach((hh,i)=>{ hh.x=w*SPOTS[i][0]; hh.y=h*SPOTS[i][1]; });
-  // random "homes" on the road network — everyone starts from a different corner of the streets
-  const HOMES=[[0.5,0.97],[0.5,0.03],[0.04,0.32],[0.96,0.32],[0.04,0.66],[0.96,0.66]];
-  if(!S.kids){
-    const homes=HOMES.slice(); for(let i=homes.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=homes[i];homes[i]=homes[j];homes[j]=t;}
-    const defs=[
-      {id:0,me:true,name:"You",color:cssv('--grass'),face:"🧒",spd:200},
-      {id:1,name:"Chip",color:cssv('--bad'),face:"🦝",spd:174},
-      {id:2,name:"Dot",color:cssv('--sky'),face:"🐹",spd:170},
-      {id:3,name:"Bax",color:cssv('--plum'),face:"🐰",spd:166},
-    ];
-    S.kids=defs.map((d,i)=>{ const hm=homes[i], p=V(w*hm[0],h*hm[1]);
-      return Object.assign({}, d, { p:V(p.x,p.y), cart:V(p.x, p.y+(hm[1]>0.5?-18:18)), cv:V(0,0), v:V(0,0),
-        load: d.me?2 : 1+((Math.random()*3)|0), noise:V(0,0), tgt:null, route:null, rp:0, claimed:false, delay: d.me?0:0.3+Math.random()*0.9 }); });
-  } else S.kids.forEach(k=>{ k.p.x=Math.max(10,Math.min(w-10,k.p.x)); k.p.y=Math.max(10,Math.min(h-10,k.p.y)); });
-  S.L=Math.max(24,w*0.085); S.claimR=Math.max(30,w*0.11);
-}
-function reset(){ S={target:null,phase:"ready",houses:null,kids:null,moved:false}; layout();
-  ov.innerHTML=`<h2>Grab a job before the other kids!</h2><p>Drag your cart to a house. 🔥 gold ones pay double — everyone's after those.</p><button class="obtn" id="go">Out you go!</button>`;
-  ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault();start();}); draw();
-}
+function reset(){ S={target:null,phase:"ready",moved:false}; buildMap(); geometry(); placeKids();
+  $("hotline").innerHTML="🔥 Hot today: "+S.hotCues.join(" ")+" · pay <b>double</b>";
+  ov.innerHTML=`<h2>Grab a job before the other kids!</h2><p>Haul your cart to a house that's hiring. 🔥 gold jobs pay double — everyone's after those. Parks &amp; vacation houses (🧳) are dead ends.</p><button class="obtn" id="go">Out you go!</button>`;
+  ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault();start();}); draw(); }
 function start(){ if(S.phase!=="ready")return; S.phase="run"; ov.style.display="none"; last=performance.now(); raf=requestAnimationFrame(loop); }
-function onRoad(p){ return S.roads.some(r=>p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h); }
-function nearestHouse(kid,preferHot){ let best=null,bd=1e9;
-  S.houses.forEach(hh=>{ if(hh.by!==null)return; let d=Math.hypot(kid.p.x-hh.x,kid.p.y-hh.y-16); if(preferHot&&!hh.hot)d+=260;
-    if(d<bd){bd=d;best=hh;} }); return best; }
 
-function loop(now){ const dt=Math.min(0.033,(now-last)/1000); last=now; update(dt); draw(); if(S.phase==="run") raf=requestAnimationFrame(loop); }
-function cartFollow(k,dt){ let to=sub(k.p,k.cart),d=len(to); k.cart=add(k.cart,mul(k.cv,dt)); to=sub(k.p,k.cart);d=len(to);
+const onRoad=p=> isRoad(Math.floor(p.x/cw), Math.floor(p.y/ch));
+function nearestHouse(kid,preferHot){ let best=null,bd=1e9;
+  for(const h of S.houses){ if(h.by!==null)continue; let d=dist(kid.p,h.door); if(preferHot&&!h.hot)d+=cw*3;
+    if(d<bd){bd=d;best=h;} } return best; }
+
+/* ---- physics — everyone shares it ---- */
+function collide(p,rad){ for(const s of S.solids){ const L=s.x-rad,R=s.x+s.w+rad,T=s.y-rad,B=s.y+s.h+rad;
+  if(p.x>L&&p.x<R&&p.y>T&&p.y<B){ const dl=p.x-L,dr=R-p.x,dt=p.y-T,db=B-p.y, m=Math.min(dl,dr,dt,db);
+    if(m===dl)p.x=L; else if(m===dr)p.x=R; else if(m===dt)p.y=T; else p.y=B; } } }
+function cartFollow(k,dt){ let to=sub(k.p,k.cart); k.cart=add(k.cart,mul(k.cv,dt)); to=sub(k.p,k.cart); const d=len(to);
   if(d>S.L){ const pull=mul(norm(to),d-S.L); k.cart=add(k.cart,pull); k.cv=add(mul(k.cv,0.86),mul(pull,5)); } else k.cv=mul(k.cv,0.86); }
 function loadMult(k){ return 1/(1+0.15*(k.load||0)); }                 // more stuff in the cart = slower
 function steerKid(k,aim,dt){
-  const base=(onRoad(k.p)?k.spd:k.spd*0.68)*loadMult(k);              // grass is slower than the road
+  const base=(onRoad(k.p)?k.spd:k.spd*0.66)*loadMult(k);              // grass is slower than the street
   let desired=V(0,0); if(aim){ const to=sub(aim,k.p),dl=len(to); if(dl>4) desired=mul(norm(to),base); }
   const backv=norm(sub(k.p,k.cart)); const head=norm((desired.x||desired.y)?desired:k.v);
   const align=Math.max(0,backv.x*head.x+backv.y*head.y); const penalty=0.55+0.45*align; // sharp turns swing the cart & slow you
   k.v=add(mul(k.v,1-Math.min(1,9*dt)),mul(desired,Math.min(1,9*dt)*penalty));
   k.p=add(k.p,mul(k.v,dt)); k.p.x=Math.max(10,Math.min(W-10,k.p.x)); k.p.y=Math.max(10,Math.min(H-10,k.p.y));
-  cartFollow(k,dt);
+  cartFollow(k,dt); collide(k.p,12); collide(k.cart,9);
 }
-function buildRoute(from,house){ const vx=W*0.5;                       // route along the roads: onto the main street, along a crossroad, up to the house
-  const crossY = Math.abs(house.y-H*0.32) < Math.abs(house.y-H*0.66) ? H*0.32 : H*0.66;
-  return [ V(vx,from.y), V(vx,crossY), V(house.x,crossY), V(house.x,house.y+16) ];
-}
+function planRoute(k){ const start=nearestRoadCell(k.p); const path=bfs(start,k.tgt.acc);
+  k.route=path.map(([c,r])=>cellC(c,r)); k.route.push(k.tgt.door); k.rp=0; }
+
+function loop(now){ const dt=Math.min(0.033,(now-last)/1000); last=now; update(dt); draw(); if(S.phase==="run") raf=requestAnimationFrame(loop); }
 function update(dt){
-  S.clock=(S.clock||0)+dt; if(S.clock>20){ finish(S.houses.find(h=>h.by===0)||null); return; }
-  // player — steer toward the drag point (same physics as everyone)
+  S.clock=(S.clock||0)+dt; if(S.clock>22){ finish(S.houses.find(h=>h.by===0)||null); return; }
   const Y=S.kids[0]; steerKid(Y, S.target, dt);
-  for(const hh of S.houses){ if(hh.by===null && Math.hypot(Y.p.x-hh.x,Y.p.y-hh.y-16)<S.claimR){ hh.by=0; finish(hh); return; } }
-  // rivals — pick a job, route along the ROADS, drive it with human wobble + cart swing
+  // you claim the house you PULL UP TO — near its door AND nearly stopped (nearest door wins).
+  // so you can barrel past other houses at speed and only land the one you actually arrive at.
+  if(S.moved && len(Y.v)<55){ let best=null,bd=S.claimR*0.85;
+    for(const h of S.houses){ if(h.by!==null)continue; const d=dist(Y.p,h.door); if(d<bd){bd=d;best=h;} }
+    if(best){ best.by=0; finish(best); return; } }
   for(let i=1;i<S.kids.length;i++){ const k=S.kids[i];
     if(k.claimed) continue;
     if(!S.moved){ continue; }            // everyone waits at home until YOU head out
     if(k.delay>0){ k.delay-=dt; continue; }  // then a short, staggered human reaction time
-    if(!k.tgt || k.tgt.by!==null){ k.tgt=nearestHouse(k,true)||nearestHouse(k,false); if(k.tgt){ k.route=buildRoute(k.p,k.tgt); k.rp=0; } }
+    if(!k.tgt || k.tgt.by!==null){ k.tgt=nearestHouse(k,true)||nearestHouse(k,false); if(k.tgt) planRoute(k); }
     if(!k.tgt) continue;
     k.noise=add(mul(k.noise,0.92), V((Math.random()-0.5)*3,(Math.random()-0.5)*3));  // human-ish weave
-    if(len(k.noise)>16) k.noise=mul(norm(k.noise),16);
+    if(len(k.noise)>15) k.noise=mul(norm(k.noise),15);
     const wp=k.route[k.rp], last=k.rp>=k.route.length-1;
-    const reach = last? S.claimR : Math.max(18,S.claimR*0.7);
-    if(Math.hypot(k.p.x-wp.x,k.p.y-wp.y) < reach){ if(last){ k.tgt.by=k.id; k.claimed=true; k.v=mul(k.v,0.3); continue; } k.rp++; }
+    const reach = last? S.claimR : Math.max(16,Math.min(cw,ch)*0.4);
+    if(dist(k.p,wp) < reach){ if(last){ k.tgt.by=k.id; k.claimed=true; k.v=mul(k.v,0.3); continue; } k.rp++; }
     steerKid(k, add(wp, last?V(0,0):k.noise), dt);   // wobble en route, aim true at the door
   }
-  if(S.houses.every(hh=>hh.by!==null)){ finish(S.houses.find(h=>h.by===0)||null); return; }
-  // rivals have each grabbed their one job & parked — the scramble's over. Give a hustling
-  // player a brief window to still land a leftover, then wrap so it never feels frozen.
+  if(S.houses.every(h=>h.by!==null)){ finish(S.houses.find(h=>h.by===0)||null); return; }
   if(S.kids.slice(1).every(k=>k.claimed)){ S.grace=(S.grace||0)+dt; if(S.grace>4){ finish(S.houses.find(h=>h.by===0)||null); } }
 }
+
+/* ---- drawing ---- */
 function rr(x,y,w,h,r){ ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath(); }
+function drawRoads(){ ctx.fillStyle=cssv('--road');
+  for(const [c,r] of S.roadCells) ctx.fillRect(c*cw,r*ch,cw+0.5,ch+0.5);
+  ctx.strokeStyle=cssv('--roadline'); ctx.lineWidth=2; ctx.setLineDash([7,9]);
+  for(const [c,r] of S.roadCells){ const ctr=cellC(c,r);
+    if(isRoad(c+1,r)){ ctx.beginPath();ctx.moveTo(ctr.x,ctr.y);ctx.lineTo(ctr.x+cw,ctr.y);ctx.stroke(); }
+    if(isRoad(c,r+1)){ ctx.beginPath();ctx.moveTo(ctr.x,ctr.y);ctx.lineTo(ctr.x,ctr.y+ch);ctx.stroke(); } }
+  ctx.setLineDash([]); }
+function drawHouse(h){ const ctr=h.center, b=bodyRect(h.c,h.r), claimed=h.by!==null, who=claimed?S.kids[h.by]:null;
+  // yard
+  ctx.fillStyle=cssv('--lawn'); rr(ctr.x-cw*0.42,ctr.y-ch*0.4,cw*0.84,ch*0.8,8); ctx.fill();
+  // house body + roof
+  ctx.save(); if(h.hot&&!claimed){ ctx.shadowColor=cssv('--gold'); ctx.shadowBlur=16; }
+  ctx.fillStyle=cssv('--panel'); ctx.strokeStyle=claimed?who.color:(h.hot?cssv('--gold'):cssv('--line')); ctx.lineWidth=claimed?3:(h.hot?2.5:1.4);
+  ctx.globalAlpha=claimed?0.55:1; rr(b.x,b.y,b.w,b.h,4); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(b.x-2,b.y); ctx.lineTo(b.x+b.w/2,b.y-ch*0.2); ctx.lineTo(b.x+b.w+2,b.y); ctx.closePath();
+  ctx.fillStyle=claimed?who.color:cssv('--roof'); ctx.fill(); ctx.restore();
+  // door (faces the street)
+  ctx.fillStyle=claimed?who.color:cssv('--roof'); const dw=cw*0.12,dh=ch*0.16; ctx.globalAlpha=claimed?0.6:1;
+  ctx.fillRect(ctr.x-dw/2, b.y+b.h-dh, dw, dh);
+  // job sign above / claim label
+  ctx.globalAlpha=1; ctx.textAlign="center"; ctx.textBaseline="middle";
+  if(claimed){ ctx.font="15px serif"; ctx.fillText("🧒",ctr.x,ctr.y-ch*0.03);
+    ctx.font="700 11px "+cssv('--sans'); ctx.fillStyle=who.color; ctx.fillText("● "+who.name, ctr.x, b.y+b.h+ch*0.16);
+  } else {
+    ctx.font="19px serif"; ctx.fillText(h.cue, ctr.x, b.y-ch*0.02);
+    ctx.font="800 11px "+cssv('--sans'); ctx.fillStyle=h.hot?cssv('--gold'):cssv('--muted');
+    ctx.fillText("$"+h.pay+(h.hot?" 🔥":""), ctr.x, b.y+b.h+ch*0.16);
+  }
+}
+function drawVac(v){ const ctr=cellC(v.c,v.r), b=bodyRect(v.c,v.r);
+  ctx.fillStyle=cssv('--lawn'); ctx.globalAlpha=0.6; rr(ctr.x-cw*0.42,ctr.y-ch*0.4,cw*0.84,ch*0.8,8); ctx.fill(); ctx.globalAlpha=1;
+  ctx.fillStyle=cssv('--panel'); ctx.strokeStyle=cssv('--line'); ctx.lineWidth=1.4; ctx.globalAlpha=0.7; rr(b.x,b.y,b.w,b.h,4); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(b.x-2,b.y); ctx.lineTo(b.x+b.w/2,b.y-ch*0.2); ctx.lineTo(b.x+b.w+2,b.y); ctx.closePath(); ctx.fillStyle=cssv('--roofV'); ctx.fill();
+  ctx.globalAlpha=1; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="16px serif"; ctx.fillText("🧳",ctr.x,ctr.y+ch*0.02);
+  ctx.font="700 10px "+cssv('--sans'); ctx.fillStyle=cssv('--muted'); ctx.fillText("away", ctr.x, b.y+b.h+ch*0.15); }
+function drawPark(p){ const ctr=cellC(p.c,p.r);
+  ctx.fillStyle=cssv('--park'); rr(ctr.x-cw*0.44,ctr.y-ch*0.4,cw*0.88,ch*0.8,10); ctx.fill();
+  ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="20px serif"; ctx.fillText("🌳",ctr.x,ctr.y);
+  ctx.font="700 10px "+cssv('--sans'); ctx.fillStyle=cssv('--muted'); ctx.fillText("park", ctr.x, ctr.y+ch*0.3); }
+function drawKid(k){
+  ctx.strokeStyle=k.color;ctx.lineWidth=3;ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(k.p.x,k.p.y);ctx.lineTo(k.cart.x,k.cart.y);ctx.stroke();ctx.globalAlpha=1;
+  ctx.fillStyle=cssv('--panel');ctx.strokeStyle=k.color;ctx.lineWidth=2; rr(k.cart.x-12,k.cart.y-10,24,20,6);ctx.fill();ctx.stroke();
+  ctx.font="13px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(k.me?"🛒":"🧺",k.cart.x,k.cart.y);
+  for(let L=0;L<(k.load||0);L++){ ctx.fillStyle=k.color; ctx.beginPath(); ctx.arc(k.cart.x-7+L*7,k.cart.y-13,2.4,0,7); ctx.fill(); } // load = weight
+  ctx.beginPath();ctx.arc(k.p.x,k.p.y,13,0,7);ctx.fillStyle=k.color;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
+  ctx.font="15px serif";ctx.fillText(k.face,k.p.x,k.p.y+1); }
 function draw(){
-  ctx.fillStyle=dark()?"#16241a":"#cfe3d2"; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=dark()?"#2c3a30":"#b9c6bd"; S.roads.forEach(r=>{rr(r.x,r.y,r.w,r.h,10);ctx.fill();});
-  ctx.strokeStyle="rgba(255,255,255,.45)";ctx.lineWidth=2;ctx.setLineDash([9,10]);ctx.beginPath();ctx.moveTo(W*0.5,0);ctx.lineTo(W*0.5,H);ctx.stroke();ctx.setLineDash([]);
-  // houses
-  S.houses.forEach(h=>{ const s=46; const claimed=h.by!==null; const claimer=claimed?S.kids[h.by]:null;
-    ctx.save(); if(h.hot&&!claimed){ctx.shadowColor=cssv('--gold');ctx.shadowBlur=15;}
-    ctx.fillStyle=cssv('--panel'); ctx.strokeStyle=claimed?claimer.color:(h.hot?cssv('--gold'):cssv('--line')); ctx.lineWidth=claimed?3:(h.hot?3:1.5);
-    rr(h.x-s/2,h.y,s,s,10); ctx.globalAlpha=claimed?0.55:1; ctx.fill(); ctx.stroke(); ctx.restore();
-    ctx.globalAlpha=claimed?0.6:1;
-    ctx.font="24px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(claimed?"🏠":h.cue,h.x,h.y+s/2-1);
-    ctx.font="700 12px "+cssv('--sans'); ctx.fillStyle=claimed?claimer.color:(h.hot?cssv('--gold'):cssv('--muted'));
-    ctx.fillText(claimed?("● "+claimer.name):("$"+h.pay+(h.hot?" 🔥":"")), h.x, h.y+s+9);
-    ctx.globalAlpha=1; });
-  // kids
-  for(let i=S.kids.length-1;i>=0;i--){ const k=S.kids[i]; if(k.delay>0&&!k.me) {/*still draw at home*/}
-    // rope
-    ctx.strokeStyle=k.color;ctx.lineWidth=3;ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(k.p.x,k.p.y);ctx.lineTo(k.cart.x,k.cart.y);ctx.stroke();ctx.globalAlpha=1;
-    ctx.fillStyle=cssv('--panel');ctx.strokeStyle=k.color;ctx.lineWidth=2; rr(k.cart.x-12,k.cart.y-10,24,20,6);ctx.fill();ctx.stroke();
-    ctx.font="13px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(k.me?"🛒":"🧺",k.cart.x,k.cart.y);
-    for(let L=0;L<(k.load||0);L++){ ctx.fillStyle=k.color; ctx.beginPath(); ctx.arc(k.cart.x-7+L*7,k.cart.y-13,2.4,0,7); ctx.fill(); } // load = weight
-    ctx.beginPath();ctx.arc(k.p.x,k.p.y,13,0,7);ctx.fillStyle=k.color;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
-    ctx.font="15px serif";ctx.fillText(k.face,k.p.x,k.p.y+1); }
+  ctx.fillStyle=dark()?"#0f1c14":"#d6e7d4"; ctx.fillRect(0,0,W,H);
+  drawRoads();
+  for(const p of S.parks) drawPark(p);
+  for(const v of S.vac) drawVac(v);
+  for(const h of S.houses) drawHouse(h);
+  for(let i=S.kids.length-1;i>=0;i--) drawKid(S.kids[i]);
 }
 function finish(h){ S.phase="done"; cancelAnimationFrame(raf); raf=null; games++;
   let head,body;
-  if(h&&h.hot){ goodGrabs++; head=`🔥 You grabbed a hot ${h.cue} job — $${h.pay}!`; body=`Beat the others to it. That's the good money today.`; }
-  else if(h){ head=`${h.cue} You got a $${h.pay} job.`; body=`The 🔥 gold jobs went fast — you took what was left. Hustle sooner next time.`; }
+  if(h&&h.hot){ goodGrabs++; head=`🔥 You grabbed a hot ${h.cue} job — $${h.pay}!`; body=`Beat the others to the ${JOBS[h.cue]} work. That's the good money today.`; }
+  else if(h){ head=`${h.cue} You got a $${h.pay} ${JOBS[h.cue]} job.`; body=`The 🔥 gold jobs went fast — you took what was left. Hustle sooner next time.`; }
   else { head=`😴 You dawdled — nothing left!`; body=`The other kids grabbed everything. Get moving next round.`; }
   ov.innerHTML=`<h2>${head}</h2><p>${body}</p><p style="opacity:.8">Landed a hot job ${goodGrabs}/${games}.</p><button class="obtn" id="go">Go again</button>`;
-  ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault(); reset(); start();});
-}
+  ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault(); reset(); start();}); }
+
 function pt(e){ const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top); }
 cv.addEventListener("pointerdown",e=>{ e.preventDefault(); if(S&&S.phase==="run"){ S.target=pt(e); S.moved=true; cv.setPointerCapture(e.pointerId);} });
 cv.addEventListener("pointermove",e=>{ if(S&&S.target&&S.phase==="run") S.target=pt(e); });
@@ -180,7 +273,8 @@ cv.addEventListener("pointerup",()=>{ if(S) S.target=null; });
 cv.addEventListener("pointercancel",()=>{ if(S) S.target=null; });
 window.addEventListener("resize",resize);
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(S)draw(); });
-function boot(){ $("vtag").textContent="v"+VERSION; resize(); reset(); }
+function boot(){ $("vtag").textContent="v"+VERSION; const cssW=cv.clientWidth||490; W=cssW; H=Math.round(cssW*1.28); cw=W/GW; ch=H/GH;
+  resize(); reset(); }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot); else boot();
 </script>
 </body>
