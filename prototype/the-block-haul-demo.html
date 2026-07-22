@@ -49,7 +49,7 @@
 
 <script>
 "use strict";
-const VERSION="0.3";
+const VERSION="0.4";
 const cv=document.getElementById("cv"), ctx=cv.getContext("2d"), ov=document.getElementById("ov");
 let W=0,H=0,dpr=1,S=null,raf=null,last=0,goodGrabs=0,games=0;
 const $=id=>document.getElementById(id);
@@ -65,9 +65,11 @@ function resize(){ const cssW=cv.clientWidth; const cssH=Math.round(cssW*1.24);
 const HOTSET=["🌿","🐕","🍋"];
 function layout(){ const w=W,h=H;
   S.roads=[{x:w*0.42,y:0,w:w*0.16,h:h},{x:0,y:h*0.32,w:w,h:w*0.14},{x:0,y:h*0.66,w:w,h:w*0.14}];
-  const SPOTS=[[0.14,0.15],[0.50,0.11],[0.86,0.15],[0.20,0.70],[0.80,0.70],[0.50,0.44]];
+  // houses sit in the BLOCKS between the streets — never on the vertical main road (x .42–.58)
+  // or in the crossroad bands (y .32–.44, .66–.77) — so nothing ever blocks your driving lane.
+  const SPOTS=[[0.15,0.15],[0.85,0.15],[0.15,0.53],[0.85,0.53],[0.15,0.90],[0.85,0.90]];
   if(!S.houses){
-    const cues=["🌿","🧸","🐕","🍂","🚗","🍋"];
+    const cues=["🌿","🧸","🍂","🐕","🍋","🚗"];  // hot (🌿🐕🍋) spread to TL / MR / BL corners
     S.houses=SPOTS.map((s,i)=>{ const cue=cues[i]; const hot=HOTSET.includes(cue);
       return {x:w*s[0],y:h*s[1],cue,hot,pay:hot?9:4,by:null}; });
   } else S.houses.forEach((hh,i)=>{ hh.x=w*SPOTS[i][0]; hh.y=h*SPOTS[i][1]; });
@@ -87,7 +89,7 @@ function layout(){ const w=W,h=H;
   } else S.kids.forEach(k=>{ k.p.x=Math.max(10,Math.min(w-10,k.p.x)); k.p.y=Math.max(10,Math.min(h-10,k.p.y)); });
   S.L=Math.max(24,w*0.085); S.claimR=Math.max(30,w*0.11);
 }
-function reset(){ S={target:null,phase:"ready",houses:null,kids:null}; layout();
+function reset(){ S={target:null,phase:"ready",houses:null,kids:null,moved:false}; layout();
   ov.innerHTML=`<h2>Grab a job before the other kids!</h2><p>Drag your cart to a house. 🔥 gold ones pay double — everyone's after those.</p><button class="obtn" id="go">Out you go!</button>`;
   ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault();start();}); draw();
 }
@@ -122,7 +124,8 @@ function update(dt){
   // rivals — pick a job, route along the ROADS, drive it with human wobble + cart swing
   for(let i=1;i<S.kids.length;i++){ const k=S.kids[i];
     if(k.claimed) continue;
-    if(k.delay>0){ k.delay-=dt; continue; }
+    if(!S.moved){ continue; }            // everyone waits at home until YOU head out
+    if(k.delay>0){ k.delay-=dt; continue; }  // then a short, staggered human reaction time
     if(!k.tgt || k.tgt.by!==null){ k.tgt=nearestHouse(k,true)||nearestHouse(k,false); if(k.tgt){ k.route=buildRoute(k.p,k.tgt); k.rp=0; } }
     if(!k.tgt) continue;
     k.noise=add(mul(k.noise,0.92), V((Math.random()-0.5)*3,(Math.random()-0.5)*3));  // human-ish weave
@@ -171,7 +174,7 @@ function finish(h){ S.phase="done"; cancelAnimationFrame(raf); raf=null; games++
   ov.style.display="flex"; $("go").addEventListener("pointerdown",e=>{e.preventDefault(); reset(); start();});
 }
 function pt(e){ const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top); }
-cv.addEventListener("pointerdown",e=>{ e.preventDefault(); if(S&&S.phase==="run"){ S.target=pt(e); cv.setPointerCapture(e.pointerId);} });
+cv.addEventListener("pointerdown",e=>{ e.preventDefault(); if(S&&S.phase==="run"){ S.target=pt(e); S.moved=true; cv.setPointerCapture(e.pointerId);} });
 cv.addEventListener("pointermove",e=>{ if(S&&S.target&&S.phase==="run") S.target=pt(e); });
 cv.addEventListener("pointerup",()=>{ if(S) S.target=null; });
 cv.addEventListener("pointercancel",()=>{ if(S) S.target=null; });
