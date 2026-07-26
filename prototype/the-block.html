@@ -103,7 +103,7 @@
 window.addEventListener("error",e=>{ const o=document.getElementById("ov"); if(o&&!o.dataset.crashed){o.dataset.crashed="1";o.className="overlay show";o.innerHTML='<h2>Something broke</h2><div class="ohint">'+((e&&e.message)||"error")+'</div>';} });
 
 /* ===== The Block — haul-and-claim woven into the full game (denser block, corner stands, live auction) ===== */
-const VERSION="1.0.1";
+const VERSION="1.0.2";
 const SVC={
   mow:{name:"Mowing",cue:"🌿",verb:"mowed the lawn",em:"🌱",touches:["edge it crisp","bag the clippings","trim the border"]},
   rake:{name:"Raking",cue:"🍂",verb:"raked the leaves",em:"🍂",touches:["bag them neat","clear the gutters","sweep the path"]},
@@ -196,7 +196,7 @@ function newGame(np,days){
   const money={},skill={},tool={}; players.forEach(p=>{ money[p.id]=CFG.startCash; skill[p.id]={}; tool[p.id]={wagon:false}; CAPS.forEach(c=>{skill[p.id][c]=0;tool[p.id][c]=false;}); });
   STATE={ day:1, maxDays:days, phase:"map", players, money, skill, tool, goodwill:CFG.goodwill0,
     weather:null, nextWeather:pick(WEATHER), houses:[],stands:[],vac:[],parks:[],roadCells:[], acc:{}, pos:{}, cart:{}, vel:{}, load:{},
-    daylight:{}, home:{}, work:null, mow:null, standRun:null, sale:null, pay:null, night:null, today:null, log:[], notice:"", target:null, moved:false, jobs:{} };
+    daylight:{}, home:{}, work:null, mow:null, standRun:null, sale:null, pay:null, night:null, today:null, log:[], notice:"", target:null, moved:false, started:false, jobs:{} };
   buildNeighborhood(); startDay();
 }
 function buildNeighborhood(){ const S=STATE;
@@ -228,7 +228,7 @@ function startDay(){ const S=STATE;
   const earned={},flubLost={},wasted={},leveled={};
   S.players.forEach(p=>{ earned[p.id]={}; CAPS.forEach(c=>earned[p.id][c]=0); flubLost[p.id]=0; wasted[p.id]={count:0,hours:0}; leveled[p.id]=[]; });
   S.today={earned,flubLost,wasted,leveled}; S.jobs={}; S.players.forEach(p=>S.jobs[p.id]=0); // trips taken today — paces the swarm
-  S.notice=""; S.target=null; S.moved=false; S.pay=null; S.work=null; S.standRun=null;
+  S.notice=""; S.target=null; S.moved=false; S.started=false; S.pay=null; S.work=null; S.standRun=null;
   S.players.forEach(p=>{ p.done=false; p.target=null; p.route=null; p.rp=0; p.noise=V(0,0); }); // rivals wake up and hit the block
   log(`<div class="ln"><b>— Day ${S.day} —</b> ${S.weather.em} ${S.weather.text}</div>`);
   S.phase="map"; geometry(); placeKids(); render(); startMap();
@@ -274,6 +274,7 @@ function buildRoute(fromPos,node){ const start=nearestRoadCell(fromPos), path=bf
   const wps=path.map(([c,r])=>cellC(c,r)); wps.push(V(node.door.x,node.door.y)); return wps; }
 // a rival, live on the map: pick a job, pathfind the streets to it, claim it on arrival — a real race
 function rivalStep(p,dt){ const S=STATE, id=p.id; if(p.done)return;
+  if(!S.started) return;                              // the other kids wait at home until YOU head out each morning
   if(!p.target || p.target.done){
     if((S.jobs[id]||0) > (S.jobs[0]||0)) return;      // stay in step — a rival gets at most one job ahead of you, then waits
     const t=aiPick(id); if(!t){ p.done=true; return; } p.target=t; p.route=buildRoute(S.pos[id],t); p.rp=0; }
@@ -386,33 +387,33 @@ function startSale(){ const S=STATE;
   // 3 lots per sale (design doc: family-fast) — so the scarce tools trickle out over the summer
   const offered=shuffle(items).slice(0,3);
   if(!offered.length){ toEvening(); return; }
-  S.sale={ items:offered, idx:0, price:1, high:null, tleft:5, maxT:5, acc:0, mode:"bid", loglines:[], result:"", aimax:{} };
+  S.sale={ items:offered, idx:0, price:1, high:null, tleft:8, maxT:8, acc:0, mode:"bid", loglines:[], result:"", aimax:{} };
   setupSaleItem(); S.phase="sale"; render(); startSaleLoop();
 }
 function itemValue(id,it){ const S=STATE; if(it.kind==="wagon")return Math.min(S.money[id],4+rnd(4));
   return Math.min(S.money[id], 3+2*(lvlOf(id,it.cap)-1)+rnd(3)); }
 function setupSaleItem(){ const S=STATE, sl=S.sale, it=sl.items[sl.idx];
-  sl.price=1; sl.high=null; sl.tleft=sl.maxT=5; sl.acc=0; sl.mode="bid"; sl.loglines=[]; sl.result=""; sl.aimax={};
+  sl.price=1; sl.high=null; sl.tleft=sl.maxT=8; sl.acc=0; sl.mode="bid"; sl.loglines=[]; sl.result=""; sl.aimax={};
   S.players.filter(p=>!p.human).forEach(p=>{ sl.aimax[p.id]=itemValue(p.id,it); }); }
 function startSaleLoop(){ stopSaleLoop(); last=performance.now(); saleRAF=requestAnimationFrame(saleLoop); }
 function stopSaleLoop(){ if(saleRAF){cancelAnimationFrame(saleRAF);saleRAF=null;} }
 function saleLoop(now){ const S=STATE; if(!S||S.phase!=="sale"){saleRAF=null;return;}
   const dt=Math.min(0.05,(now-last)/1000); last=now; const sl=S.sale;
-  if(sl.mode==="bid"){ sl.tleft-=dt; sl.acc+=dt; if(sl.acc>0.5){ sl.acc=0; aiBidStep(); } if(sl.tleft<=0) resolveSaleItem(); saleFace(); }
+  if(sl.mode==="bid"){ sl.tleft-=dt; sl.acc+=dt; if(sl.acc>1.1){ sl.acc=0; aiBidStep(); } if(sl.tleft<=0) resolveSaleItem(); saleFace(); }
   else if(sl.mode==="sold"){ sl.tleft-=dt; if(sl.tleft<=0) nextSaleItem(); saleFace(); }
   saleRAF=requestAnimationFrame(saleLoop); }
 function aiBidStep(){ const S=STATE, sl=S.sale;
   const elig=S.players.filter(p=>!p.human && sl.high!==p.id && sl.price+1<=sl.aimax[p.id] && sl.price+1<=S.money[p.id]);
-  if(!elig.length)return; if(Math.random()<0.6){ const p=pick(elig); sl.price+=1; sl.high=p.id; sl.tleft=Math.max(sl.tleft,2.5);
+  if(!elig.length)return; if(Math.random()<0.5){ const p=pick(elig); sl.price+=1; sl.high=p.id; sl.tleft=Math.max(sl.tleft,4);
     sl.loglines.unshift(`<b style="color:${p.color}">${p.name}</b> bids ${cash(sl.price)}`); if(sl.loglines.length>4)sl.loglines.pop(); } }
 function playerBid(){ const S=STATE, sl=S.sale; if(!sl||sl.mode!=="bid")return; if(sl.high===0)return; if(sl.price+1>S.money[0])return;
-  sl.price+=1; sl.high=0; sl.tleft=Math.max(sl.tleft,2.5); sl.loglines.unshift(`<b style="color:var(--accent)">You</b> bid ${cash(sl.price)}`); if(sl.loglines.length>4)sl.loglines.pop(); saleFace(); }
+  sl.price+=1; sl.high=0; sl.tleft=Math.max(sl.tleft,4); sl.loglines.unshift(`<b style="color:var(--accent)">You</b> bid ${cash(sl.price)}`); if(sl.loglines.length>4)sl.loglines.pop(); saleFace(); }
 function resolveSaleItem(){ const S=STATE, sl=S.sale, it=sl.items[sl.idx];
   if(sl.high!==null){ const w=S.players[sl.high]; S.money[sl.high]-=sl.price; S.tool[sl.high][it.cap]=true;
     sl.result=`<b style="color:${w.color}">${w.name}</b> won the ${it.em} ${it.name} for ${cash(sl.price)}!`;
     log(`<div class="ln"><b style="color:${w.color}">${w.name}</b> won the <span class="gold">${it.name}</span> ${it.em} for ${cash(sl.price)}.</div>`);
   } else { sl.result=`No takers for the ${it.em} ${it.name} — stays on the table.`; }
-  sl.mode="sold"; sl.tleft=1.5; }
+  sl.mode="sold"; sl.tleft=2.2; }
 function nextSaleItem(){ const S=STATE, sl=S.sale; sl.idx++;
   if(sl.idx>=sl.items.length){ stopSaleLoop(); toEvening(); return; } setupSaleItem(); render(); }
 function skipSale(){ stopSaleLoop(); toEvening(); }
@@ -595,7 +596,7 @@ function render(){ const S=STATE, tag=$("phaseTag");
 /* ---- input ---- */
 function pt(e){ const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top); }
 function wire(){
-  cv.addEventListener("pointerdown",e=>{ if(STATE&&STATE.phase==="map"){ e.preventDefault(); STATE.target=pt(e); STATE.moved=true; STATE.notice=""; cv.setPointerCapture(e.pointerId); setHint(); } });
+  cv.addEventListener("pointerdown",e=>{ if(STATE&&STATE.phase==="map"){ e.preventDefault(); STATE.target=pt(e); STATE.moved=true; STATE.started=true; STATE.notice=""; cv.setPointerCapture(e.pointerId); setHint(); } });
   cv.addEventListener("pointermove",e=>{ if(STATE&&STATE.phase==="map"&&STATE.target) STATE.target=pt(e); });
   cv.addEventListener("pointerup",()=>{ if(STATE)STATE.target=null; });
   cv.addEventListener("pointercancel",()=>{ if(STATE)STATE.target=null; });
