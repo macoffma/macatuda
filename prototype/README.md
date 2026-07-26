@@ -3,25 +3,26 @@
 Self-contained, single-file prototypes. Open any in a browser (phone, iPad,
 laptop) — no build, no install.
 
-- **`the-block.html` — The Block, integrated build (current, v0.9).** The real
-  loop, with the haul-and-claim woven in. The "drum up work" phase is a **canvas
-  neighborhood** — winding streets, building graphics, parks and vacation lots
-  (unplayable) — packed with **~12 houses** (so the block doesn't run dry across a
-  multi-trip day) and **corner lemonade stands** you haul to and run yourself
-  (your own venture, not a job at a house). You **haul your cart** to a house to
-  claim its job (that *is* your knock) or to a stand to set up. Travel spends
-  daylight (street distance), so *which* node you pick is the strategic cost.
-  Hiring → the work beat (mowing micro-game / touch-for-tips) → payday; not hiring
-  → a bust; a stand → sell over the afternoon. Rivals take their turns between
-  yours and glide to their spots as nodes grey out. Day ends → **garage sale: a
-  live, timed auction** — one scarce item at a time (one of each tool on the
-  block — win it and that niche is yours), a countdown, and the other kids bidding
-  against you — → **end-of-day reveal** (stacked earnings bars) → end-of-summer
-  scoring. Keeps the whole economy (earned skills, tools, weather-hot double-pay
-  jobs, goodwill, fair AI). Verified headless across many full summers: zero
-  errors, loop always completes, rivals competitive, tools stay exclusive. Still
-  deferred: the *live simultaneous* swarm (rivals move between your trips, not all
-  at once). Built on the feel-test in **`the-block-haul-demo.html`** (v0.6).
+- **`the-block.html` — The Block, integrated build (current, v1.0).** The full
+  single-device game. The "drum up work" phase is a **live canvas neighborhood** —
+  winding streets, building graphics, parks and vacation lots (unplayable) —
+  packed with **~12 houses** and **corner lemonade stands** you haul to and run
+  yourself. **All four kids haul at once, in real time** — the rivals pathfind the
+  streets, race you, and **claim houses live as you watch** (snipe a hot one out
+  from under you if you dawdle). You **haul your cart** to a house to claim its job
+  (that *is* your knock) or to a stand to set up; travel spends daylight (street
+  distance), so *which* node you pick is the strategic cost. Hiring → the work
+  beat (mowing micro-game / touch-for-tips) → payday; not hiring → a bust; a stand
+  → sell over the afternoon. Day ends → **garage sale: a live, timed auction** —
+  one scarce item at a time (one of each tool on the block — win it and that niche
+  is yours), a countdown, and the other kids bidding against you — → **end-of-day
+  reveal** (stacked earnings bars) → end-of-summer scoring. Keeps the whole
+  economy (earned skills, tools, weather-hot double-pay jobs, goodwill). Verified
+  headless across many full summers: zero errors, loop always completes, rivals
+  claim live through the swarm path, tools stay exclusive, and a cue-aware player
+  leads on day one (competitive but beatable). Remaining epic: the **networked
+  TV-hub + phone** build (this is the single-screen version of that vision). Built
+  on the feel-test in **`the-block-haul-demo.html`** (v0.6).
 - **`the-block-greybox.html` — The Block, pre-haul greybox (v0.4/0.7).** A
   neighborhood summer hustle on a **procedural map** — you *drum up* work, you
   don't pick it off a board. Key systems: **knock on doors** to prospect (read a
