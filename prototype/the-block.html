@@ -103,7 +103,7 @@
 window.addEventListener("error",e=>{ const o=document.getElementById("ov"); if(o&&!o.dataset.crashed){o.dataset.crashed="1";o.className="overlay show";o.innerHTML='<h2>Something broke</h2><div class="ohint">'+((e&&e.message)||"error")+'</div>';} });
 
 /* ===== The Block — haul-and-claim woven into the full game (denser block, corner stands, live auction) ===== */
-const VERSION="1.0";
+const VERSION="1.0.1";
 const SVC={
   mow:{name:"Mowing",cue:"🌿",verb:"mowed the lawn",em:"🌱",touches:["edge it crisp","bag the clippings","trim the border"]},
   rake:{name:"Raking",cue:"🍂",verb:"raked the leaves",em:"🍂",touches:["bag them neat","clear the gutters","sweep the path"]},
@@ -196,7 +196,7 @@ function newGame(np,days){
   const money={},skill={},tool={}; players.forEach(p=>{ money[p.id]=CFG.startCash; skill[p.id]={}; tool[p.id]={wagon:false}; CAPS.forEach(c=>{skill[p.id][c]=0;tool[p.id][c]=false;}); });
   STATE={ day:1, maxDays:days, phase:"map", players, money, skill, tool, goodwill:CFG.goodwill0,
     weather:null, nextWeather:pick(WEATHER), houses:[],stands:[],vac:[],parks:[],roadCells:[], acc:{}, pos:{}, cart:{}, vel:{}, load:{},
-    daylight:{}, home:{}, work:null, mow:null, standRun:null, sale:null, pay:null, night:null, today:null, log:[], notice:"", target:null, moved:false, rivGoal:{} };
+    daylight:{}, home:{}, work:null, mow:null, standRun:null, sale:null, pay:null, night:null, today:null, log:[], notice:"", target:null, moved:false, jobs:{} };
   buildNeighborhood(); startDay();
 }
 function buildNeighborhood(){ const S=STATE;
@@ -227,7 +227,8 @@ function startDay(){ const S=STATE;
   S.stands.forEach(s=>{ s.done=false; s.by=null; s.hot=S.weather.stand>=3; });
   const earned={},flubLost={},wasted={},leveled={};
   S.players.forEach(p=>{ earned[p.id]={}; CAPS.forEach(c=>earned[p.id][c]=0); flubLost[p.id]=0; wasted[p.id]={count:0,hours:0}; leveled[p.id]=[]; });
-  S.today={earned,flubLost,wasted,leveled}; S.notice=""; S.target=null; S.moved=false; S.pay=null; S.work=null; S.standRun=null;
+  S.today={earned,flubLost,wasted,leveled}; S.jobs={}; S.players.forEach(p=>S.jobs[p.id]=0); // trips taken today — paces the swarm
+  S.notice=""; S.target=null; S.moved=false; S.pay=null; S.work=null; S.standRun=null;
   S.players.forEach(p=>{ p.done=false; p.target=null; p.route=null; p.rp=0; p.noise=V(0,0); }); // rivals wake up and hit the block
   log(`<div class="ln"><b>— Day ${S.day} —</b> ${S.weather.em} ${S.weather.text}</div>`);
   S.phase="map"; geometry(); placeKids(); render(); startMap();
@@ -273,7 +274,9 @@ function buildRoute(fromPos,node){ const start=nearestRoadCell(fromPos), path=bf
   const wps=path.map(([c,r])=>cellC(c,r)); wps.push(V(node.door.x,node.door.y)); return wps; }
 // a rival, live on the map: pick a job, pathfind the streets to it, claim it on arrival — a real race
 function rivalStep(p,dt){ const S=STATE, id=p.id; if(p.done)return;
-  if(!p.target || p.target.done){ const t=aiPick(id); if(!t){ p.done=true; return; } p.target=t; p.route=buildRoute(S.pos[id],t); p.rp=0; }
+  if(!p.target || p.target.done){
+    if((S.jobs[id]||0) > (S.jobs[0]||0)) return;      // stay in step — a rival gets at most one job ahead of you, then waits
+    const t=aiPick(id); if(!t){ p.done=true; return; } p.target=t; p.route=buildRoute(S.pos[id],t); p.rp=0; }
   p.noise=add(mul(p.noise||V(0,0),0.92), V((Math.random()-0.5)*3,(Math.random()-0.5)*3)); if(vlen(p.noise)>15)p.noise=mul(norm(p.noise),15);
   const wp=p.route[p.rp], lastwp=p.rp>=p.route.length-1, reach=lastwp?S.claimRP:Math.max(16,Math.min(cw,ch)*0.4);
   if(distp(S.pos[id],wp)<reach){ if(lastwp){ const tgt=p.target; p.target=null;
@@ -295,7 +298,7 @@ function arrive(node){ const S=STATE;
 
 /* ---- knock / work (houses) ---- */
 function knock(h){ const S=STATE; const t=travelH(0,h); S.daylight[0]-=t; S.acc[0]=h.acc.slice(); h.seen=true; h.done=true; h.by=0; S.pos[0]=V(h.door.x,h.door.y);
-  if(!h.need){ S.today.wasted[0].count++; S.today.wasted[0].hours+=t;
+  if(!h.need){ S.today.wasted[0].count++; S.today.wasted[0].hours+=t; S.jobs[0]++;
     log(`<div class="ln">You knocked at the ${h.fam}s' — <span class="r">no work today</span>.</div>`);
     S.pay={bust:true,fam:h.fam,t}; S.phase="payday"; render(); return; }
   const base=svcPay(0,h);
@@ -315,7 +318,7 @@ function finishJob(){ const S=STATE, Wk=S.work; S.daylight[0]=Math.max(0,S.dayli
   S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(Wk.flubbed?-1:1))); gainXP(0,Wk.svc);
   S.pay={earned,base:Wk.base,tips:Wk.flubbed?0:Wk.tips,flubbed:Wk.flubbed,boosted:Wk.boosted,label:`${SVC[Wk.svc].name} · the ${Wk.fam}s'`};
   log(`<div class="ln"><b style="color:var(--accent)">You</b> ${SVC[Wk.svc].verb} at the ${Wk.fam}s' — <span class="${Wk.flubbed?'r':'g'}">${cash(earned)}</span>${Wk.flubbed?" (flubbed the tip)":Wk.tips?` <span class="gold">(+${cash(Wk.tips)} tips)</span>`:""}.</div>`);
-  S.work=null; S.phase="payday"; render(); }
+  S.work=null; S.jobs[0]++; S.phase="payday"; render(); }
 /* mowing micro-game */
 function startMow(){ const S=STATE; S.mow={pos:8,dir:1,speed:0.7,zStart:34,zW:30,stripes:0,reveal:""}; S.phase="mowgame"; render(); mgLoop(); }
 function mgLoop(){ const S=STATE; if(!S||S.phase!=="mowgame"){mgRAF=null;return;} const M=S.mow;
@@ -347,7 +350,7 @@ function standSell(action){ const S=STATE, R=S.standRun; if(!R)return;
 function finishStand(){ const S=STATE, R=S.standRun; S.money[0]+=R.sold; S.today.earned[0].lem+=R.sold; gainXP(0,"lem");
   S.pay={earned:R.sold,base:0,tips:0,flubbed:false,boosted:S.weather.stand>=3,label:`Lemonade stand · ${R.name}`,standrun:true};
   log(`<div class="ln"><b style="color:var(--accent)">You</b> ran a lemonade stand at ${R.name} — <span class="g">${cash(R.sold)}</span>.</div>`);
-  S.standRun=null; S.phase="payday"; render(); }
+  S.standRun=null; S.jobs[0]++; S.phase="payday"; render(); }
 function paydayNext(){ const S=STATE; S.notice=""; if(humanCanAct()){ S.phase="map"; render(); startMap(); } else endDay(); }
 
 /* ---- rivals ---- */
@@ -358,7 +361,7 @@ function estStand(id,s){ const per=s.traffic*STATE.weather.stand+(lvlOf(id,"lem"
 function nodeVal(id,n){ return n.kind==="stand"?estStand(id,n):estHouse(id,n); }
 function aiPick(id){ const opts=[...STATE.houses.filter(h=>canAfford(id,h)),...STATE.stands.filter(s=>canAfford(id,s))];
   if(!opts.length)return null; opts.sort((a,b)=>nodeVal(id,b)-nodeVal(id,a)); const r=Math.random(); const i=r<0.5?0:r<0.8?Math.min(1,opts.length-1):rnd(opts.length); return opts[i]; }
-function aiDoHouse(p,h){ const S=STATE; const t=travelH(p.id,h); S.daylight[p.id]-=t; S.acc[p.id]=h.acc.slice(); h.done=true; h.by=p.id; h.seen=true;
+function aiDoHouse(p,h){ const S=STATE; const t=travelH(p.id,h); S.daylight[p.id]-=t; S.acc[p.id]=h.acc.slice(); h.done=true; h.by=p.id; h.seen=true; S.jobs[p.id]=(S.jobs[p.id]||0)+1;
   if(!h.need){ log(`<div class="ln"><b style="color:${p.color}">${p.name}</b> knocked at the ${h.fam}s' — <span class="r">no work</span>.</div>`); return; }
   let base=svcPay(p.id,h),tips=0,risk=flubRisk(p.id,h.svc,h.quirk),flub=false;
   const pushes=p.pers==="greedy"?3:p.pers==="cautious"?1:1+rnd(3);
@@ -366,7 +369,7 @@ function aiDoHouse(p,h){ const S=STATE; const t=travelH(p.id,h); S.daylight[p.id
   S.daylight[p.id]=Math.max(0,S.daylight[p.id]-CFG.jobTime); const earned=flub?base:base+tips; S.money[p.id]+=earned; S.today.earned[p.id][h.svc]+=earned;
   S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(flub?-1:1))); gainXP(p.id,h.svc);
   log(`<div class="ln"><b style="color:${p.color}">${p.name}</b> ${SVC[h.svc].verb} at the ${h.fam}s' — <span class="${flub?'r':'g'}">${cash(earned)}</span>${flub?" (flub)":""}.</div>`); }
-function aiDoStand(p,s){ const S=STATE; const t=travelH(p.id,s); S.daylight[p.id]-=t+CFG.standSetup; S.acc[p.id]=s.acc.slice(); s.done=true; s.by=p.id;
+function aiDoStand(p,s){ const S=STATE; const t=travelH(p.id,s); S.daylight[p.id]-=t+CFG.standSetup; S.acc[p.id]=s.acc.slice(); s.done=true; s.by=p.id; S.jobs[p.id]=(S.jobs[p.id]||0)+1;
   const hours=p.pers==="greedy"?4:p.pers==="cautious"?2:1+rnd(3); let sold=0; for(let hr=0;hr<hours;hr++){ if(S.daylight[p.id]<1)break; S.daylight[p.id]-=1; sold+=standPerHour(p.id,s,hr); }
   S.money[p.id]+=sold; S.today.earned[p.id].lem+=sold; gainXP(p.id,"lem");
   log(`<div class="ln"><b style="color:${p.color}">${p.name}</b> ran a lemonade stand at ${s.name} — <span class="g">${cash(sold)}</span>.</div>`); }
