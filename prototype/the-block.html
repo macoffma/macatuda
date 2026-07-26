@@ -103,7 +103,7 @@
 window.addEventListener("error",e=>{ const o=document.getElementById("ov"); if(o&&!o.dataset.crashed){o.dataset.crashed="1";o.className="overlay show";o.innerHTML='<h2>Something broke</h2><div class="ohint">'+((e&&e.message)||"error")+'</div>';} });
 
 /* ===== The Block — haul-and-claim woven into the full game (denser block, corner stands, live auction) ===== */
-const VERSION="1.0.2";
+const VERSION="1.1";
 const SVC={
   mow:{name:"Mowing",cue:"🌿",verb:"mowed the lawn",em:"🌱",touches:["edge it crisp","bag the clippings","trim the border"]},
   rake:{name:"Raking",cue:"🍂",verb:"raked the leaves",em:"🍂",touches:["bag them neat","clear the gutters","sweep the path"]},
@@ -231,7 +231,7 @@ function startDay(){ const S=STATE;
   S.notice=""; S.target=null; S.moved=false; S.started=false; S.pay=null; S.work=null; S.standRun=null;
   S.players.forEach(p=>{ p.done=false; p.target=null; p.route=null; p.rp=0; p.noise=V(0,0); }); // rivals wake up and hit the block
   log(`<div class="ln"><b>— Day ${S.day} —</b> ${S.weather.em} ${S.weather.text}</div>`);
-  S.phase="map"; geometry(); placeKids(); render(); startMap();
+  S.phase="map"; geometry(); placeKids(); S.fx=[]; initAmbient(); render(); startMap();
 }
 function placeKids(){ const S=STATE; S.players.forEach(p=>{ const hc=S.home[p.id], c=cellC(hc[0],hc[1]);
   S.pos[p.id]=V(c.x,c.y); S.cart[p.id]=V(c.x, c.y+(hc[1]>GH/2?-16:16)); S.vel[p.id]=V(0,0);
@@ -284,75 +284,55 @@ function rivalStep(p,dt){ const S=STATE, id=p.id; if(p.done)return;
       if(tgt&&!tgt.done){ if(tgt.kind==="stand")aiDoStand(p,tgt); else aiDoHouse(p,tgt); refreshSide(); } return; }
     else p.rp++; }
   steerKid(id, add(wp, lastwp?V(0,0):p.noise), dt); }
-function mapUpdate(dt){ const S=STATE;
-  if(!humanCanAct()){ endDay(); return; }            // block's all worked out → head home
-  steerKid(0, S.target, dt);
-  if(S.moved){ let best=null,bd=S.claimRP;
-    for(const n of S.houses){ if(n.done)continue; const d=distp(S.pos[0],n.center); if(d<bd){bd=d;best=n;} }
-    for(const n of S.stands){ if(n.done)continue; const d=distp(S.pos[0],n.center); if(d<bd){bd=d;best=n;} }
-    if(best){ arrive(best); if(S.phase!=="map")return; } }
+function mapUpdate(dt){ const S=STATE; updateAmbient(dt); updateFx(dt);
+  if(S.work){ updateWork(dt); }
+  else {
+    if(!humanCanAct()){ endDay(); return; }            // block's all worked out → head home
+    steerKid(0, S.target, dt);
+    if(S.moved){ let best=null,bd=S.claimRP;
+      for(const n of S.houses){ if(n.done)continue; const d=distp(S.pos[0],n.center); if(d<bd){bd=d;best=n;} }
+      for(const n of S.stands){ if(n.done)continue; const d=distp(S.pos[0],n.center); if(d<bd){bd=d;best=n;} }
+      if(best) arrive(best); } }
   for(let i=1;i<S.players.length;i++) rivalStep(S.players[i],dt); }
+
+/* ---- jobs happen ON THE MAP: pull up to the yard, watch it get done, coins deposit — no screens ---- */
 function arrive(node){ const S=STATE;
   if(!canAfford(0,node)){ if(S.notice!=="daylight"){ S.notice="daylight"; setHint(); } return; }
-  S.target=null; S.moved=false; stopMap();
-  if(node.kind==="stand") startStand(node); else knock(node); }
+  const t=travelH(0,node); S.daylight[0]-=t; S.acc[0]=node.acc.slice(); node.done=true; node.by=0; node.seen=true;
+  S.pos[0]=V(node.door.x,node.door.y); S.target=null; S.moved=false;
+  if(node.kind==="stand"){ S.work={kind:"stand",node,svc:"lem",t:0,dur:2.4}; }
+  else if(!node.need){ S.today.wasted[0].count++; S.today.wasted[0].hours+=t; S.work={kind:"bust",node,t:0,dur:0.9};
+    log(`<div class="ln">You tried the ${node.fam}s' — <span class="r">no work today</span>.</div>`); }
+  else { const base=svcPay(0,node), flub=Math.random()<flubRisk(0,node.svc,node.quirk);
+    const tip=flub?0:Math.max(1,Math.round(CFG.tip*QUIRK[node.quirk].tipMul*(1+(lvlOf(0,node.svc)-1)*0.5)));
+    S.work={kind:"job",node,svc:node.svc,fam:node.fam,base,tip,flub,boosted:node.hot,t:0,dur:1.9}; }
+  refreshSide(); }
+function updateWork(dt){ const S=STATE, w=S.work; w.t+=dt; if(w.t<w.dur) return; completeWork(); }
+function completeWork(){ const S=STATE, w=S.work; S.work=null; S.jobs[0]++;
+  if(w.kind==="bust"){ puff(w.node.center,"no work 🚫"); }
+  else if(w.kind==="stand"){ S.daylight[0]=Math.max(0,S.daylight[0]-(CFG.standSetup+3));
+    let sold=0; for(let h=0;h<3;h++) sold+=standPerHour(0,w.node,h); S.money[0]+=sold; S.today.earned[0].lem+=sold; gainXP(0,"lem");
+    spawnCoins(w.node.center,sold,"🥤"); log(`<div class="ln"><b style="color:var(--accent)">You</b> ran a lemonade stand at ${w.node.name} — <span class="g">${cash(sold)}</span>.</div>`); }
+  else { const pay=w.flub?w.base:w.base+w.tip; S.daylight[0]=Math.max(0,S.daylight[0]-CFG.jobTime);
+    S.money[0]+=pay; S.today.earned[0][w.svc]+=pay; if(w.flub)S.today.flubLost[0]+=w.tip;
+    S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(w.flub?-1:1))); gainXP(0,w.svc);
+    spawnCoins(w.node.center,pay,SVC[w.svc].cue);
+    log(`<div class="ln"><b style="color:var(--accent)">You</b> ${SVC[w.svc].verb} at the ${w.fam}s' — <span class="${w.flub?'r':'g'}">${cash(pay)}</span>${w.flub?" (flubbed the tip)":w.tip?` <span class="gold">(+${cash(w.tip)} tips)</span>`:""}.</div>`); }
+  refreshSide(); if(!humanCanAct()) endDay(); }
 
-/* ---- knock / work (houses) ---- */
-function knock(h){ const S=STATE; const t=travelH(0,h); S.daylight[0]-=t; S.acc[0]=h.acc.slice(); h.seen=true; h.done=true; h.by=0; S.pos[0]=V(h.door.x,h.door.y);
-  if(!h.need){ S.today.wasted[0].count++; S.today.wasted[0].hours+=t; S.jobs[0]++;
-    log(`<div class="ln">You knocked at the ${h.fam}s' — <span class="r">no work today</span>.</div>`);
-    S.pay={bust:true,fam:h.fam,t}; S.phase="payday"; render(); return; }
-  const base=svcPay(0,h);
-  S.work={hid:h.id,fam:h.fam,svc:h.svc,quirk:h.quirk,base,tips:0,risk:flubRisk(0,h.svc,h.quirk),touches:0,flubbed:false,boosted:h.hot,reveal:""};
-  if(h.svc==="mow"){ startMow(); } else { S.phase="work"; render(); } }
-function work(action){ const S=STATE, Wk=S.work; if(!Wk)return;
-  if(action==="done"){ finishJob(); return; }
-  if(S.daylight[0]<CFG.touchTime){ finishJob(); return; }
-  S.daylight[0]-=CFG.touchTime; Wk.touches++;
-  if(Math.random()<Wk.risk){ Wk.reveal=flubText(Wk.svc)+" No tip this time."; S.today.flubLost[0]+=Wk.tips; Wk.tips=0; Wk.flubbed=true; finishJob(); return; }
-  const t=SVC[Wk.svc].touches, tip=Math.round(CFG.tip*QUIRK[Wk.quirk].tipMul); Wk.tips+=tip;
-  Wk.reveal=`You ${t[(Wk.touches-1)%t.length]} — +${cash(tip)} tip${QUIRK[Wk.quirk].tipMul<1?" (tight tippers)":""}`;
-  Wk.risk+=0.16; render(); }
-function flubText(svc){ return {mow:"You clipped the flowerbed! 🌷",rake:"The bag split! 💨",sit:"The toddler melted down! 😭",wash:"You left streaks! 😬",dog:"The dog slipped the leash! 🐕💨"}[svc]||"Whoops!"; }
-function finishJob(){ const S=STATE, Wk=S.work; S.daylight[0]=Math.max(0,S.daylight[0]-CFG.jobTime);
-  const earned=Wk.flubbed?Wk.base:Wk.base+Wk.tips; S.money[0]+=earned; S.today.earned[0][Wk.svc]+=earned;
-  S.goodwill=Math.max(0,Math.min(CFG.gwMax,S.goodwill+(Wk.flubbed?-1:1))); gainXP(0,Wk.svc);
-  S.pay={earned,base:Wk.base,tips:Wk.flubbed?0:Wk.tips,flubbed:Wk.flubbed,boosted:Wk.boosted,label:`${SVC[Wk.svc].name} · the ${Wk.fam}s'`};
-  log(`<div class="ln"><b style="color:var(--accent)">You</b> ${SVC[Wk.svc].verb} at the ${Wk.fam}s' — <span class="${Wk.flubbed?'r':'g'}">${cash(earned)}</span>${Wk.flubbed?" (flubbed the tip)":Wk.tips?` <span class="gold">(+${cash(Wk.tips)} tips)</span>`:""}.</div>`);
-  S.work=null; S.jobs[0]++; S.phase="payday"; render(); }
-/* mowing micro-game */
-function startMow(){ const S=STATE; S.mow={pos:8,dir:1,speed:0.7,zStart:34,zW:30,stripes:0,reveal:""}; S.phase="mowgame"; render(); mgLoop(); }
-function mgLoop(){ const S=STATE; if(!S||S.phase!=="mowgame"){mgRAF=null;return;} const M=S.mow;
-  M.pos+=M.dir*M.speed; if(M.pos<=1){M.pos=1;M.dir=1;}else if(M.pos>=99){M.pos=99;M.dir=-1;}
-  const mk=$("mowmk"); if(mk)mk.style.left=M.pos+"%"; mgRAF=requestAnimationFrame(mgLoop); }
-function mgStop(){ if(mgRAF){cancelAnimationFrame(mgRAF);mgRAF=null;} }
-function mowStripe(){ const S=STATE,M=S.mow,Wk=S.work; if(!M||S.phase!=="mowgame")return;
-  if(S.daylight[0]<CFG.touchTime){ mgStop(); finishJob(); return; }
-  S.daylight[0]-=CFG.touchTime; const hit=M.pos>=M.zStart&&M.pos<=M.zStart+M.zW;
-  if(hit){ Wk.tips+=CFG.tip; M.stripes++; M.speed*=1.13; M.zW=Math.max(12,M.zW-3.5); M.zStart=8+rnd(Math.max(1,Math.round(84-M.zW))); M.reveal=`Neat stripe! +${cash(CFG.tip)} 🌱`; mgFace(); }
-  else { mgStop(); S.today.flubLost[0]+=Wk.tips; Wk.tips=0; Wk.flubbed=true; Wk.reveal="You veered into the flowerbed! 🌷"; finishJob(); } }
-function mowWrap(){ mgStop(); finishJob(); }
-function mgFace(){ const S=STATE,M=S.mow,Wk=S.work; if(!M)return;
-  const z=$("mowzone"); if(z){z.style.left=M.zStart+"%";z.style.width=M.zW+"%";}
-  const t=$("mowtips"); if(t)t.textContent=cash(Wk.base+Wk.tips);
-  const r=$("mowrev"); if(r)r.textContent=M.reveal;
-  const st=$("mowstripes"); if(st)st.innerHTML=Array(M.stripes).fill('<span class="st"></span>').join("");
-  const dl=$("mowdl"); if(dl)dl.textContent=S.daylight[0];
-  const wb=$("mowwrap"); if(wb)wb.textContent=`Wrap up — take ${cash(Wk.base+Wk.tips)}`; }
+/* ---- juice: coins & floating text ---- */
+function spawnCoins(pos,val,cue){ const S=STATE; if(!S.fx)S.fx=[];
+  const n=Math.min(7,2+Math.round(val/3)); for(let i=0;i<n;i++) S.fx.push({x:pos.x+(Math.random()-0.5)*22,y:pos.y-4,vx:(Math.random()-0.5)*26,vy:-46-Math.random()*46,life:0.9+Math.random()*0.5,coin:true});
+  S.fx.push({x:pos.x,y:pos.y-18,vx:0,vy:-24,life:1.5,text:`+$${val}${cue?" "+cue:""}`}); }
+function puff(pos,text){ const S=STATE; if(!S.fx)S.fx=[]; S.fx.push({x:pos.x,y:pos.y-14,vx:0,vy:-18,life:1.1,text,muted:true}); }
+function updateFx(dt){ const f=STATE.fx; if(!f)return; for(let i=f.length-1;i>=0;i--){ const c=f[i]; c.x+=c.vx*dt; c.y+=c.vy*dt; if(c.coin)c.vy+=150*dt; c.life-=dt; if(c.life<=0)f.splice(i,1); } }
 
-/* ---- lemonade stand (your own venture at a corner) ---- */
-function startStand(spot){ const S=STATE; const t=travelH(0,spot); S.daylight[0]-=t+CFG.standSetup; S.acc[0]=spot.acc.slice(); spot.done=true; spot.by=0; S.pos[0]=V(spot.door.x,spot.door.y);
-  S.standRun={sid:spot.id,spot,name:spot.name,sold:0,hour:0,reveal:""}; S.phase="standrun"; render(); }
-function standSell(action){ const S=STATE, R=S.standRun; if(!R)return;
-  if(action==="packup"){ finishStand(); return; }
-  if(S.daylight[0]<1){ finishStand(); return; }
-  S.daylight[0]-=1; const batch=standPerHour(0,R.spot,R.hour); R.hour++; R.sold+=batch; R.reveal=`Sold a batch of lemonade — +${cash(batch)}!`;
-  if(S.daylight[0]<1)finishStand(); else render(); }
-function finishStand(){ const S=STATE, R=S.standRun; S.money[0]+=R.sold; S.today.earned[0].lem+=R.sold; gainXP(0,"lem");
-  S.pay={earned:R.sold,base:0,tips:0,flubbed:false,boosted:S.weather.stand>=3,label:`Lemonade stand · ${R.name}`,standrun:true};
-  log(`<div class="ln"><b style="color:var(--accent)">You</b> ran a lemonade stand at ${R.name} — <span class="g">${cash(R.sold)}</span>.</div>`);
-  S.standRun=null; S.jobs[0]++; S.phase="payday"; render(); }
-function paydayNext(){ const S=STATE; S.notice=""; if(humanCanAct()){ S.phase="map"; render(); startMap(); } else endDay(); }
+/* ---- ambient life so the block feels lived-in ---- */
+const AMBIENT=["🚶","🚶‍♀️","🐕","🐈","🛴","👵"];
+function initAmbient(){ const S=STATE; S.ambient=[]; for(let i=0;i<6;i++){ const rc=pick(S.roadCells), p=cellC(rc[0],rc[1]);
+  S.ambient.push({em:pick(AMBIENT), p:V(p.x,p.y), tc:pick(S.roadCells), spd:16+Math.random()*20}); } }
+function updateAmbient(dt){ const S=STATE; if(!S.ambient)return; for(const a of S.ambient){ const tgt=cellC(a.tc[0],a.tc[1]);
+  if(distp(a.p,tgt)<11){ a.tc=pick(S.roadCells); } const to=sub(tgt,a.p),d=vlen(to)||1; a.p.x+=to.x/d*a.spd*dt; a.p.y+=to.y/d*a.spd*dt; } }
 
 /* ---- rivals ---- */
 function estHouse(id,h){ let pay=4.5+QUIRK[h.quirk].basePay+(lvlOf(id,h.svc)-1)+(hasTool(id,h.svc)?2:0);
@@ -466,11 +446,24 @@ function drawKid(p){ const P=STATE.pos[p.id],C=STATE.cart[p.id]; if(!P||!C)retur
   for(let L=0;L<(STATE.load[p.id]||0);L++){ ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(C.x-7+L*7,C.y-13,2.4,0,7);ctx.fill(); }
   ctx.beginPath();ctx.arc(P.x,P.y,13,0,7);ctx.fillStyle=p.color;ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle="#fff";ctx.stroke();
   ctx.font="15px serif";ctx.fillText(p.face,P.x,P.y+1); }
+function drawAmbient(){ if(!STATE.ambient)return; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.font="12px serif"; ctx.globalAlpha=0.7;
+  for(const a of STATE.ambient) ctx.fillText(a.em,a.p.x,a.p.y); ctx.globalAlpha=1; }
+function drawWorkRing(){ const w=STATE.work; if(!w)return; const p=STATE.pos[0], prog=Math.min(1,w.t/w.dur);
+  ctx.beginPath(); ctx.arc(p.x,p.y,21,0,7); ctx.strokeStyle="rgba(0,0,0,.15)"; ctx.lineWidth=4; ctx.stroke();
+  ctx.beginPath(); ctx.arc(p.x,p.y,21,-Math.PI/2,-Math.PI/2+prog*2*Math.PI); ctx.strokeStyle=w.kind==="bust"?cssv('--bad'):cssv('--gold'); ctx.lineWidth=4; ctx.stroke();
+  ctx.font="15px serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(w.kind==="bust"?"🚫":(w.kind==="stand"?"🥤":SVC[w.svc].cue), p.x, p.y-30); }
+function drawFx(){ const f=STATE.fx; if(!f)return; ctx.textAlign="center"; ctx.textBaseline="middle";
+  for(const c of f){ const a=Math.max(0,Math.min(1,c.life)); ctx.globalAlpha=a;
+    if(c.coin){ ctx.font="12px serif"; ctx.fillText("🪙",c.x,c.y); }
+    else { ctx.font="800 13px "+cssv('--sans'); ctx.fillStyle=c.muted?cssv('--muted'):cssv('--gold'); ctx.fillText(c.text,c.x,c.y); } }
+  ctx.globalAlpha=1; }
 function drawMap(){ if(!STATE||!cw)return;
   ctx.fillStyle=dark()?"#0f1c14":"#d6e7d4"; ctx.fillRect(0,0,W,H);
-  drawRoads(); for(const p of STATE.parks)drawPark(p); for(const v of STATE.vac)drawVac(v);
+  drawRoads(); drawAmbient(); for(const p of STATE.parks)drawPark(p); for(const v of STATE.vac)drawVac(v);
   for(const s of STATE.stands)drawStand(s); for(const h of STATE.houses)drawHouse(h);
-  const order=STATE.players.slice().sort((a,b)=>a.human?1:-1); for(const p of order)drawKid(p); }
+  const order=STATE.players.slice().sort((a,b)=>a.human?1:-1); for(const p of order)drawKid(p);
+  drawWorkRing(); drawFx(); }
 
 /* ================= DOM: hud + overlays ================= */
 function hud(){ const S=STATE,gw=S.goodwill,m=moodOf(gw),dl=S.daylight[0];
@@ -483,8 +476,8 @@ function hud(){ const S=STATE,gw=S.goodwill,m=moodOf(gw),dl=S.daylight[0];
     <div class="card"><div class="label">Savings</div><div class="stand">${stand}</div></div></div>`; }
 function setHint(){ const S=STATE, el=$("hint"); if(!el)return; if(S.phase!=="map"){ el.innerHTML=""; return; }
   const note = S.notice==="daylight" ? `<div class="banner bad" style="margin-bottom:8px">Not enough daylight for that one — grab something closer or call it a day.</div>` : "";
-  el.innerHTML = note + `<div class="hint">${S.weather.em} <b>${boostList()} pay double today.</b> The other kids are already out working the block — <b>haul your cart</b> to a 🏠 that's hiring (read the cue + weather) or a 🥤 corner for your own stand, and <b>beat them to the 🔥 hot ones</b> before they're claimed.</div>
-    <div class="barrow"><span class="hint" style="margin:0">☀️ ${Math.max(0,S.daylight[0])}h daylight left</span><button class="btn" data-act="go-home">Call it a day →</button></div>`; }
+  el.innerHTML = note + `<div class="hint">${S.weather.em} <b>${boostList()} pay double today.</b> <b>Haul your cart</b> into a 🏠 yard that's hiring (read the cue + weather) or a 🥤 corner — you'll get to work right there and the coins land in your savings. Beat the other kids to the 🔥 hot ones.</div>
+    <div class="barrow"><span class="hint" style="margin:0">the day winds down as you work — savings & daylight up top ↑</span><button class="btn" data-act="go-home">Call it a day →</button></div>`; }
 function ovShow(html){ ov.className="overlay show"; ov.innerHTML=html; }
 function ovHide(){ ov.className="overlay"; ov.innerHTML=""; }
 // live-map side panels (HUD money + the block log) update as rivals claim jobs, without a full re-render
@@ -551,18 +544,15 @@ function earningsBars(){ const S=STATE; const tot=S.players.map(p=>({p,t:CAPS.re
     return `<div class="erow"><span class="who"><span class="chip" style="background:${p.color}"></span>${p.name}</span><span class="track" style="width:${Math.max(6,t/max*100)}%">${segs}</span><span class="tot">${cash(t)}</span></div>`; }).join("");
   const sw=CAPS.map(c=>`<span class="s"><span class="sw" style="background:${CAPMETA[c].color}"></span>${CAPMETA[c].name}</span>`).join("");
   return `<div>${rows}</div><div class="swatches">${sw}</div>`; }
-function ovEvening(){ const S=STATE,N=S.night,last=S.day>=S.maxDays,m=moodOf(N.gw);
-  const w=S.today.wasted[0],undone=S.houses.filter(h=>h.need&&!h.done).length,flub=S.today.flubLost[0];
-  return `<h2>End of Day ${S.day} 🌙</h2>
-    ${N.soured?`<div class="banner bad">The neighbors are getting grumpy — a sour block at summer's end halves everyone's savings.</div>`:`<div class="banner good">The block is <b>${m.t.toLowerCase()}</b> tonight.</div>`}
+function ovEvening(){ const S=STATE,N=S.night,last=S.day>=S.maxDays;
+  const tot=S.players.map(p=>CAPS.reduce((n,c)=>n+S.today.earned[p.id][c],0));
+  const yourRank=S.players.slice().sort((a,b)=>S.money[b.id]-S.money[a.id]).findIndex(p=>p.human)+1;
+  const lead = yourRank===1 ? "You're ahead on the block! 🏆" : `You're ${["","1st","2nd","3rd","4th"][yourRank]} in savings.`;
+  return `<h2>Day ${S.day} — sun's down 🌙</h2>
+    ${N.soured?`<div class="banner bad">The block's getting grumpy — stay sour by summer's end and everyone's savings get halved.</div>`:`<div class="banner good">${lead}</div>`}
     <h3>Who earned what today</h3>${earningsBars()}
-    <h3>What you left on the table</h3>
-    <div class="lot"><div class="box"><div class="n">${cash(flub)}</div><div class="l">tips lost to flubs</div></div>
-      <div class="box"><div class="n">${w.count}</div><div class="l">busts (${w.hours}h walked)</div></div>
-      <div class="box"><div class="n">${undone}</div><div class="l">jobs left on the block</div></div></div>
-    <h3>Your skills & tools</h3>${capsGraph(0,true)}
-    <div class="ohint" style="margin-top:8px">Tomorrow: ${S.nextWeather.em} looks like ${S.nextWeather.key}.</div>
-    <div class="btnrow"><button class="btn primary" data-act="next-day">${last?"See how the summer went":"Next morning →"}</button></div>`; }
+    <div class="ohint" style="margin-top:6px">Tomorrow looks like ${S.nextWeather.em} ${S.nextWeather.key}.</div>
+    <div class="btnrow"><button class="btn primary" data-act="next-day">${last?"See how the summer went →":"Next morning →"}</button></div>`; }
 function ovOver(){ const S=STATE,mult=S.soured?0.5:1,score={}; S.players.forEach(p=>score[p.id]=Math.floor(S.money[p.id]*mult));
   const ranked=S.players.slice().sort((a,b)=>score[b.id]-score[a.id]),win=ranked[0];
   const rows=ranked.map((p,i)=>`<div class="row ${i===0?'win':''}"><span><span class="chip" style="background:${p.color}"></span>${p.name}${i===0?" 🏆":""}</span><span class="cash">${cash(score[p.id])}</span></div>`).join("");
@@ -586,30 +576,22 @@ function render(){ const S=STATE, tag=$("phaseTag");
   $("hud").innerHTML=hud(); const P=S.phase;
   if(P==="map"){ ovHide(); setHint(); }
   else { setHint();
-    if(P==="work")ovShow(ovWork()); else if(P==="mowgame")ovShow(ovMow()); else if(P==="standrun")ovShow(ovStand());
-    else if(P==="payday")ovShow(ovPayday()); else if(P==="sale")ovShow(ovSale()); else if(P==="evening")ovShow(ovEvening()); else if(P==="over")ovShow(ovOver()); }
-  if(P==="mowgame")mgFace(); if(P==="sale")saleFace();
+    if(P==="sale")ovShow(ovSale()); else if(P==="evening")ovShow(ovEvening()); else if(P==="over")ovShow(ovOver()); }
+  if(P==="sale")saleFace();
   $("logwrap").innerHTML = S.log.length?`<div class="log"><h3>Around the block</h3><div class="feed">${S.log.join("")}</div></div>`:"";
-  if(tag)tag.textContent=({map:"pick a job",work:"on the job",mowgame:"mowing",standrun:"the stand",payday:"payday",sale:"garage sale",evening:"end of day",over:"summer's over"})[P]||"the block";
+  if(tag)tag.textContent=({map:"work the block",sale:"garage sale",evening:"end of day",over:"summer's over"})[P]||"the block";
   if(P!=="map"&&P!=="over") drawMap(); }
 
 /* ---- input ---- */
 function pt(e){ const r=cv.getBoundingClientRect(); return V(e.clientX-r.left,e.clientY-r.top); }
 function wire(){
-  cv.addEventListener("pointerdown",e=>{ if(STATE&&STATE.phase==="map"){ e.preventDefault(); STATE.target=pt(e); STATE.moved=true; STATE.started=true; STATE.notice=""; cv.setPointerCapture(e.pointerId); setHint(); } });
-  cv.addEventListener("pointermove",e=>{ if(STATE&&STATE.phase==="map"&&STATE.target) STATE.target=pt(e); });
+  cv.addEventListener("pointerdown",e=>{ if(STATE&&STATE.phase==="map"&&!STATE.work){ e.preventDefault(); STATE.target=pt(e); STATE.moved=true; STATE.started=true; STATE.notice=""; cv.setPointerCapture(e.pointerId); setHint(); } });
+  cv.addEventListener("pointermove",e=>{ if(STATE&&STATE.phase==="map"&&!STATE.work&&STATE.target) STATE.target=pt(e); });
   cv.addEventListener("pointerup",()=>{ if(STATE)STATE.target=null; });
   cv.addEventListener("pointercancel",()=>{ if(STATE)STATE.target=null; });
   document.addEventListener("click",e=>{ const b=e.target.closest("[data-act]"); if(!b)return; const a=b.dataset.act;
     if(a==="start") newGame(parseInt($("np").value),parseInt($("nd").value));
     else if(a==="go-home") endDay();
-    else if(a==="touch") work("touch");
-    else if(a==="wrapup") work("done");
-    else if(a==="mow-stripe") mowStripe();
-    else if(a==="mow-wrap") mowWrap();
-    else if(a==="sell") standSell("sell");
-    else if(a==="packup") standSell("packup");
-    else if(a==="payday-next") paydayNext();
     else if(a==="sale-bid") playerBid();
     else if(a==="sale-skip") skipSale();
     else if(a==="next-day") nextDay();

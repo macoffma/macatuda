@@ -3,8 +3,17 @@
 Self-contained, single-file prototypes. Open any in a browser (phone, iPad,
 laptop) — no build, no install.
 
-- **`the-block.html` — The Block, integrated build (current, v1.0).** The full
-  single-device game. The "drum up work" phase is a **live canvas neighborhood** —
+- **`the-block.html` — The Block, integrated build (current, v1.1).** The full
+  single-device game. **Jobs now happen on the map** — no work/mowing/payday
+  screens. You haul your cart into a hiring yard (or a corner stand), the kid
+  works in place (a progress ring + the job's cue), and coins pop out and land in
+  your savings automatically. Your *strategy* (which house, your skill, tools,
+  weather) sets the payout; the per-job mini-game screens are gone. The block is
+  **lived-in** now (neighbors, pets, a scooter drifting the sidewalks), the dusk
+  reveal is decluttered, and the whole trip loop stays on one screen. *Next: the
+  garage sale becomes an on-map tug-of-war for contested tools.* Below is the
+  prior build's description; the systems (skills, tools, weather-hot jobs,
+  goodwill, live paced swarm, auction) are unchanged. The "drum up work" phase is a **live canvas neighborhood** —
   winding streets, building graphics, parks and vacation lots (unplayable) —
   packed with **~12 houses** and **corner lemonade stands** you haul to and run
   yourself. **All four kids haul at once, in real time** — the rivals pathfind the
